@@ -27,5 +27,5 @@ if __name__ == '__main__':
     cats = payment_sheet.categories
 
     for category in cats:
-        if not category.payments[0].payed:
+        if category.payments[0].payable_within_2days:
             print(f"{category} - {(category.payments[0])}")

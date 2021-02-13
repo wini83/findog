@@ -13,5 +13,13 @@ class Payment:
     def __str__(self):
         return f"{self.amount}zł - {self.payed} - {self.due_date}"
 
-    def is_near(self):
-        pass
+    @property
+    def payable_within_2days(self) -> bool:
+        today = datetime.datetime.now()
+        delta = self.due_date - today
+        if not self.payed:
+            if delta.days <= 2:
+                return True
+            return False
+        else:
+            return False
