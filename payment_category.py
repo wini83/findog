@@ -2,8 +2,8 @@ from payment import Payment
 
 
 class PaymentCategory:
-    name: str
-    payments: list[Payment]
+    name: str = None
+    payments: list[Payment] = None
 
     def __init__(self, name="", column="C"):
         self.name = name
