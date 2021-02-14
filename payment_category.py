@@ -7,7 +7,7 @@ class PaymentCategory:
 
     def __init__(self, name="", column="C"):
         self.name = name
-        self.payments = []
+        self.payments = [Payment]
         self.column = column
 
     def __str__(self):
