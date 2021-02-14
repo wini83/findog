@@ -8,13 +8,12 @@ from payment_category import PaymentCategory
 
 
 class PaymentSheet:
-    _categories: list[PaymentCategory] = None
     _sheet: Worksheet = None
     _name: string = None
     _monitored_cols: list[string] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: list[string]):
-        self._categories = []
+        self._categories = list[PaymentCategory]
         self._sheet = worksheet
         self._name = name
         self._monitored_cols = monitored_cols
