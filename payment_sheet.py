@@ -15,7 +15,7 @@ class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
     _categories: List[PaymentCategory] = None
-    _monitored_cols: List[string] = None
+    _monitored_cols: List[str] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: List[string]):
         self._categories = []
