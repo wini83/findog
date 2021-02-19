@@ -24,11 +24,11 @@ class PaymentSheet:
         self._monitored_cols = monitored_cols
 
     @property
-    def monitored_cols(self) -> List[string]:
+    def monitored_cols(self) -> List[str]:
         return self._monitored_cols
 
     @monitored_cols.setter
-    def monitored_cols(self, value: List[string]):
+    def monitored_cols(self, value: List[str]):
         self._monitored_cols = value
 
     @property
