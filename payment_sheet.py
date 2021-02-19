@@ -8,31 +8,31 @@ from openpyxl.worksheet.worksheet import Worksheet
 from payment import Payment
 from payment_category import PaymentCategory
 
-import typing
+from typing import List
 
 
 class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
-    _categories = None
-    _monitored_cols = None
+    _categories: List[PaymentCategory] = None
+    _monitored_cols: List[string] = None
 
-    def __init__(self, worksheet: Worksheet, name: string, monitored_cols):
+    def __init__(self, worksheet: Worksheet, name: string, monitored_cols: List[string]):
         self._categories = []
         self._sheet = worksheet
         self._name = name
         self._monitored_cols = monitored_cols
 
     @property
-    def monitored_cols(self) -> list[string]:
+    def monitored_cols(self) -> List[string]:
         return self._monitored_cols
 
     @monitored_cols.setter
-    def monitored_cols(self, value: list[string]):
+    def monitored_cols(self, value: List[string]):
         self._monitored_cols = value
 
     @property
-    def categories(self) -> list[PaymentCategory]:
+    def categories(self) -> List[PaymentCategory]:
         return self._categories
 
     @property
