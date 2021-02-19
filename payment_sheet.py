@@ -1,3 +1,5 @@
+from typing import Any
+
 import string
 from datetime import datetime
 
@@ -10,9 +12,10 @@ from payment_category import PaymentCategory
 class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
+    _categories: [PaymentCategory] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: list[string]):
-        self._categories = list[PaymentCategory]
+        self._categories = []
         self._sheet = worksheet
         self._name = name
         self._monitored_cols = monitored_cols
@@ -49,7 +52,7 @@ class PaymentSheet:
         active_row = self.get_active_row
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
-            item = PaymentCategory(name=name, column=column)
+            item: PaymentCategory = PaymentCategory(name=name, column=column)
             amount = float(self._sheet[f"{column}{active_row}"].value)
             column_int = self._sheet[f"{column}{active_row}"].col_idx
             try:
@@ -58,6 +61,7 @@ class PaymentSheet:
                 done = False
 
             due_date = self._sheet.cell(column=column_int + 2, row=active_row).value
-            item.payments.append(Payment(payed=done, amount=amount, due_date=due_date, excel_row=active_row))
+            new_payment = Payment(payed=done, amount=amount, due_date=due_date, excel_row=active_row)
+            item.payments.append(new_payment)
 
             self._categories.append(item)
