@@ -8,12 +8,14 @@ from openpyxl.worksheet.worksheet import Worksheet
 from payment import Payment
 from payment_category import PaymentCategory
 
+import typing
+
 
 class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
     _categories = None
-    _monitored_cols: list[string] = None
+    _monitored_cols: List[string] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: list[string]):
         self._categories = []
