@@ -12,7 +12,8 @@ from payment_category import PaymentCategory
 class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
-    _categories: [PaymentCategory] = None
+    _categories: list[PaymentCategory] = None
+    _monitored_cols: list[string] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: list[string]):
         self._categories = []
