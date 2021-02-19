@@ -8,13 +8,15 @@ from io import BytesIO
 
 import config
 
+from typing import List
+
 
 class PaymentBook:
-    _payment_sheets: list[PaymentSheet] = None
+    _payment_sheets: List[PaymentSheet] = None
     _workbook: Workbook = None
-    _monitored_sheets: list[string] = None
+    _monitored_sheets: List[str] = None
 
-    def __init__(self, monitored_sheets: list[string]):
+    def __init__(self, monitored_sheets: List[str]):
         self._payment_sheets = []
         self._monitored_sheets = monitored_sheets
 
@@ -31,9 +33,9 @@ class PaymentBook:
         return self._payment_sheets
 
     @property
-    def monitored_sheets(self) -> list[string]:
+    def monitored_sheets(self) -> List[str]:
         return self._monitored_sheets
 
     @monitored_sheets.setter
-    def monitored_sheets(self, value: list[string]):
+    def monitored_sheets(self, value: List[str]):
         self._monitored_sheets = value
