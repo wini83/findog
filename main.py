@@ -20,15 +20,16 @@ if __name__ == '__main__':
     downloaded_bytes = dbx.retrieve_file(config.excel_file_path)
     pu = Pushover(config.pushover_apikey, config.pushover_user)
 
-    wpk = PaymentBook(config.sheets)
+    wpk: PaymentBook = PaymentBook(config.monitored_sheets)
 
     wpk.load_from_file(downloaded_bytes)
 
-    payment_sheet = wpk.sheets[0]
+    for name, mk in config.monitored_sheets.items():
+        print(f'{name} - {mk}')
 
-    cats = payment_sheet.categories
-
-    for category in cats:
-        if category.payments[0].payable_within_2days:
-            print(f"{category} - {(category.payments[0])}")
-            pu.notify(f"{category} - {(category.payments[0])}")
+    for payment_sheet in wpk.sheets:
+        cats = payment_sheet.categories
+        for category in cats:
+            if category.payments[0].payable_within_2days:
+                print(f"{category} - {(category.payments[0])}")
+                pu.notify(f"{category} - {(category.payments[0])}")
