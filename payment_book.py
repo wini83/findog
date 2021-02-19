@@ -6,8 +6,6 @@ from openpyxl import load_workbook
 from payment_sheet import PaymentSheet
 from io import BytesIO
 
-import config
-
 from typing import List
 
 
