@@ -3,7 +3,6 @@ import string
 import dropbox
 
 
-
 class DropboxClient:
     _api_key: string = None
     _dbx: dropbox.Dropbox = None
