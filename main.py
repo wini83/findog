@@ -23,13 +23,16 @@ if __name__ == '__main__':
     wpk: PaymentBook = PaymentBook(config.monitored_sheets)
 
     wpk.load_from_file(downloaded_bytes)
+    print("-----------------------------------------")
 
     for name, mk in config.monitored_sheets.items():
         print(f'{name} - {mk}')
 
+    print("-----------------------------------------")
+
     for payment_sheet in wpk.sheets:
         cats = payment_sheet.categories
         for category in cats:
+            print(f"{payment_sheet.name}:{category} - {(category.payments[0])}")
             if category.payments[0].payable_within_2days:
-                print(f"{category} - {(category.payments[0])}")
                 pu.notify(f"{category} - {(category.payments[0])}")

@@ -64,7 +64,7 @@ class PaymentSheet:
                 done = False
 
             due_date = self._sheet.cell(column=column_int + 2, row=active_row).value
-            new_payment = Payment(payed=done, amount=amount, due_date=due_date, excel_row=active_row)
+            new_payment = Payment(paid=done, due_date=due_date, amount=amount, excel_row=active_row)
             item.payments.append(new_payment)
 
             self._categories.append(item)
