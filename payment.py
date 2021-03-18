@@ -7,7 +7,7 @@ class Payment:
     excel_row: int
     due_date: datetime.date
 
-    def __init__(self, paid=False, due_date=datetime.date(2021, 2, 28), amount=0.0, excel_row=0):
+    def __init__(self, paid=False, due_date=datetime.datetime.now(), amount=0.0, excel_row=0):
         self.due_date = due_date
         self.amount: float = amount
         self.paid: bool = paid
