@@ -1,38 +1,39 @@
-import string
-from io import BytesIO
-
-from openpyxl import load_workbook
-from openpyxl.worksheet.worksheet import Worksheet
-
 import config
 from dropbox_client import DropboxClient
+from ekartoteka import Ekartoteka
 from payment_book import PaymentBook
 from pushover import Pushover
 
 
-def get_sheet_from_file(sheet_name: string, file: bytes) -> Worksheet:
-    workbook = load_workbook(filename=BytesIO(file))
-    return workbook[sheet_name]
-
-
-if __name__ == '__main__':
-    dbx = DropboxClient(config.api_key)
+def download_file():
     downloaded_bytes = dbx.retrieve_file(config.excel_file_path)
-    pu = Pushover(config.pushover_apikey, config.pushover_user)
-
-    wpk: PaymentBook = PaymentBook(config.monitored_sheets)
-
-    wpk.load_from_file(downloaded_bytes)
+    payment_book: PaymentBook = PaymentBook(config.monitored_sheets)
+    payment_book.load_from_file(downloaded_bytes)
     print("-----------------------------------------")
 
     for name, mk in config.monitored_sheets.items():
         print(f'{name} - {mk}')
 
     print("-----------------------------------------")
+    return payment_book
 
-    for payment_sheet in wpk.sheets:
+
+def notify(payment_book: PaymentBook):
+    for payment_sheet in payment_book.sheets:
         cats = payment_sheet.categories
         for category in cats:
             print(f"{payment_sheet.name}:{category} - {(category.payments[0])}")
             if category.payments[0].payable_within_2days:
                 pu.notify(f"{category} - {(category.payments[0])}")
+
+
+if __name__ == '__main__':
+    pu = Pushover(config.pushover_apikey, config.pushover_user)
+    dbx = DropboxClient(config.api_key)
+    wpk = download_file()
+    notify(wpk)
+    getter = Ekartoteka(config.ekartoteka)
+    getter.init_requests(config.ekartoteka_idkli)
+    apartment_fee = getter.get_curret_fees_sum()
+    print(apartment_fee)
+    pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
