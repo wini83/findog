@@ -36,6 +36,10 @@ class PaymentSheet:
         return self._categories
 
     @property
+    def sheet(self) -> Worksheet:
+        return self._sheet
+
+    @property
     def name(self):
         return self._name
 

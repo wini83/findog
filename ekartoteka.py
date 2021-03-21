@@ -1,8 +1,16 @@
 import codecs
 import json
+from base64 import b64decode
+from datetime import datetime
+
 from json import JSONDecodeError
 from urllib import request
 from urllib.error import URLError
+
+
+def seconds_from_epoch() -> int:
+    from_epoch = datetime.now().timestamp().__floor__()
+    return int(from_epoch)
 
 
 class Ekartoteka:
@@ -17,7 +25,8 @@ class Ekartoteka:
     user_full_name: str = None
     user_email: str = None
     user_id: int
-    customer_id: int
+    client_id: int
+    token_expire: int
 
     def __init__(self, creditentials):
         self._creditentials = creditentials
@@ -40,6 +49,17 @@ class Ekartoteka:
         except JSONDecodeError as e:
             print(f'{e.msg}')
             return False
+
+    def _decode_token(self):
+        stra = self.token.split(".")[1]
+        stra += '=' * (-len(stra) % 4)  # restore stripped '='s
+        payload = b64decode(stra).decode("utf-8")
+        json_hr = json.loads(payload)
+        id_cli = json_hr["username"].split("_")[0]
+        id_cli = int(id_cli)
+        self.client_id = id_cli
+        exp = int(json_hr["exp"])
+        self.token_expire = exp
 
     def _get_me(self):
         if self.token is None:
@@ -65,17 +85,16 @@ class Ekartoteka:
             print("Wrong key")
             return False
 
-    def init_requests(self, customer_id):
+    def initialize(self):
         self._get_token()
         self._get_me()
-        self.customer_id = customer_id
+        self._decode_token()
 
     def get_settlements(self, year: int):
         if self.token is None:
             return False
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
-        url = self.URL_SETTLEMENTS.format(self.user_id, self.customer_id, year)
-        print(url)
+        url = self.URL_SETTLEMENTS.format(self.user_id, self.client_id, year)
         req = request.Request(url, headers=headers)
         try:
             response = request.urlopen(req)
@@ -98,8 +117,7 @@ class Ekartoteka:
         if self.token is None:
             return False
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
-        url = self.URL_PREMISES.format(self.user_id, self.customer_id)
-        print(url)
+        url = self.URL_PREMISES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
         try:
             response = request.urlopen(req)
@@ -122,7 +140,7 @@ class Ekartoteka:
         if self.token is None:
             return False
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
-        url = self.URL_MOTHLY_FEES_SUM.format(self.user_id, self.customer_id)
+        url = self.URL_MOTHLY_FEES_SUM.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
         try:
             response = request.urlopen(req)

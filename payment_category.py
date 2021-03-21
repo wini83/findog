@@ -1,9 +1,10 @@
 from payment import Payment
+from typing import List
 
 
 class PaymentCategory:
     name: str = None
-    payments: [Payment] = None
+    payments: List[Payment] = None
 
     def __init__(self, name="", column="C"):
         self.name = name
