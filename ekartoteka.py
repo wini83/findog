@@ -92,7 +92,7 @@ class Ekartoteka:
 
     def get_settlements(self, year: int):
         if self.token is None:
-            return False
+            return False, "Not initialized"
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_SETTLEMENTS.format(self.user_id, self.client_id, year)
         req = request.Request(url, headers=headers)
@@ -101,21 +101,30 @@ class Ekartoteka:
             reader = codecs.getreader("utf-8")
             # Parse Json
             data = json.load(reader(response))
-            print(data)
-            return True
-        except URLError as urle:
-            print(f'{urle.reason}')
-            return False
-        except JSONDecodeError as e:
-            print(f'{e.msg}')
-            return False
-        except KeyError:
-            print("Wrong key")
-            return False
+            return True, data
+        except URLError:
+            return False, "Network Problem"
+        except JSONDecodeError:
+            return False, "Response is not Json;"
+        except ValueError:
+            return False, "Wrong response structure"
+
+    def get_settlements_sum(self, year: int):
+        res, data = self.get_settlements(year=year)
+        if not res:
+            return False, data
+        else:
+            positions = data["results"]
+            # print(positions)
+            balance = 0.0
+            for position in positions:
+                balance += position["Ma"] - position["Wn"]
+            return True, balance
+
 
     def get_premises_data(self):
         if self.token is None:
-            return False
+            return False, "Not initialized"
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_PREMISES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
@@ -125,20 +134,17 @@ class Ekartoteka:
             # Parse Json
             data = json.load(reader(response))
             print(data)
-            return True
-        except URLError as urle:
-            print(f'{urle.reason}')
-            return False
-        except JSONDecodeError as e:
-            print(f'{e.msg}')
-            return False
-        except KeyError:
-            print("Wrong key")
-            return False
+            return True, data
+        except URLError:
+            return False, "Network Problem"
+        except JSONDecodeError:
+            return False, "Response is not Json;"
+        except ValueError:
+            return False, "Wrong response structure"
 
     def get_curret_fees_sum(self):
         if self.token is None:
-            return False
+            return False, "Not initialized"
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_MOTHLY_FEES_SUM.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
@@ -148,15 +154,9 @@ class Ekartoteka:
             # Parse Json
             data = json.load(reader(response))
             return data[0]["Brutto"]
-        except URLError as urle:
-            print(f'{urle.reason}')
-            return False
-        except JSONDecodeError as e:
-            print(f'{e.msg}')
-            return False
-        except KeyError:
-            print("Wrong key")
-            return False
+        except URLError:
+            return False, "Network Problem"
+        except JSONDecodeError:
+            return False, "Response is not Json;"
         except ValueError:
-            print("Wrong response")
-            return False
+            return False, "Wrong response structure"

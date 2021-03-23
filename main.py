@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import config
 from dropbox_client import DropboxClient
 from ekartoteka import Ekartoteka
@@ -36,6 +38,11 @@ if __name__ == '__main__':
     getter.initialize()
     apartment_fee = getter.get_curret_fees_sum()
     print(apartment_fee)
-    pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
+    res_setl, delta = getter.get_settlements_sum(datetime.now().year)
+    if res_setl:
+        pu.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
+    else:
+        pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
+
     wpk.update_current_payment_amount(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee)
     wpk.save_to_file(filename="Oplaty.xlsm")
