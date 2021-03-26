@@ -34,7 +34,7 @@ def notify_ongoing_payments(payment_book: PaymentBook, pu: Pushover, rundry: boo
 @click.option("--rundry", is_flag=True, help="Run without notifications", default=False)
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
 @click.option("--noexcel", is_flag=True, help="Run without Excel file", default=False)
-def main(rundry,noekart,noexcel):
+def main(rundry, noekart, noexcel):
     """
 A simple program to keep your payments in check
     """
@@ -50,6 +50,7 @@ A simple program to keep your payments in check
         notify_ongoing_payments(wpk, pu, rundry)
         if not noekart:
             ekartoteka_run(pu, rundry, wpk)
+        wpk.save_to_file(filename="Oplaty.xlsm")
 
 
 def ekartoteka_run(pu, rundry, wpk):
@@ -74,7 +75,6 @@ def ekartoteka_run(pu, rundry, wpk):
         paid = None
 
     wpk.update_current_payment(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee, paid=paid)
-    wpk.save_to_file(filename="Oplaty.xlsm")
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
-from typing import Any
-
 import string
 from datetime import datetime
 
+from openpyxl.cell import Cell
+from openpyxl.styles import PatternFill, Color
 from openpyxl.worksheet.worksheet import Worksheet
 
 from payment import Payment
@@ -16,6 +16,9 @@ class PaymentSheet:
     _name: string = None
     _categories: List[PaymentCategory] = None
     _monitored_cols: List[str] = None
+    redFill = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
+    greenFill = PatternFill(fill_type='solid', start_color="00FF00")
+    yellowFill = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: List[str]):
         self._categories = []
@@ -63,12 +66,29 @@ class PaymentSheet:
             amount = float(self._sheet[f"{column}{active_row}"].value)
             column_int = self._sheet[f"{column}{active_row}"].col_idx
             try:
-                done = bool(self._sheet.cell(column=column_int + 1, row=active_row).value)
+                paid = bool(self._sheet.cell(column=column_int + 1, row=active_row).value)
             except ValueError:
-                done = False
+                paid = False
 
             due_date = self._sheet.cell(column=column_int + 2, row=active_row).value
-            new_payment = Payment(paid=done, due_date=due_date, amount=amount, excel_row=active_row)
+            new_payment = Payment(paid=paid, due_date=due_date, amount=amount, excel_row=active_row)
             item.payments.append(new_payment)
 
             self._categories.append(item)
+
+            cell_amount: Cell = self.sheet[f'{column}{active_row}']
+            cell_paid: Cell = self.sheet.cell(row=active_row, column=column_int + 1)
+            cell_due_date: Cell = self.sheet.cell(row=active_row, column=column_int + 2)
+
+            if new_payment.overdue:
+                cell_amount.fill = self.redFill
+                cell_paid.fill = self.redFill
+                cell_due_date.fill = self.redFill
+            elif new_payment.paid:
+                cell_amount.fill = self.greenFill
+                cell_paid.fill = self.greenFill
+                cell_due_date.fill = self.greenFill
+            else:
+                cell_amount.fill = self.yellowFill
+                cell_paid.fill = self.yellowFill
+                cell_due_date.fill = self.yellowFill
