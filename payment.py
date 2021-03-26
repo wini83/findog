@@ -33,3 +33,12 @@ class Payment:
             return False
         else:
             return False
+
+    @property
+    def overdue(self) -> bool:
+        today = datetime.datetime.now()
+        delta = self.due_date - today
+        if delta.total_seconds() < 0 and not self.paid:
+            return True
+        else:
+            return False

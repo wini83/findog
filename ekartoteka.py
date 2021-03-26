@@ -112,7 +112,7 @@ class Ekartoteka:
     def get_settlements_sum(self, year: int):
         res, data = self.get_settlements(year=year)
         if not res:
-            return False, data
+            return False, None
         else:
             positions = data["results"]
             # print(positions)

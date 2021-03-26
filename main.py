@@ -64,7 +64,16 @@ def ekartoteka_run(pu, rundry, wpk):
             pu.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
         else:
             pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
-    wpk.update_current_payment_amount(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee)
+
+    if res_setl and delta is not None:
+        if delta > 0:
+            paid = False
+        else:
+            paid = True
+    else:
+        paid = None
+
+    wpk.update_current_payment(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee, paid=paid)
     wpk.save_to_file(filename="Oplaty.xlsm")
 
 

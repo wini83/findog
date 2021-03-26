@@ -1,10 +1,11 @@
 import string
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
 from typing import List
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
+from openpyxl.cell import Cell
 from openpyxl.styles import PatternFill, Color
 
 from payment_sheet import PaymentSheet
@@ -14,6 +15,9 @@ class PaymentBook:
     _payment_sheets: List[PaymentSheet] = None
     _workbook: Workbook = None
     _monitored_sheets = None
+    redFill = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
+    greenFill = PatternFill(fill_type='solid', start_color="00FF00")
+    yellowFill = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 
     def __init__(self, monitored_sheets):
         self._payment_sheets = []
@@ -30,18 +34,42 @@ class PaymentBook:
     def save_to_file(self, filename):
         self._workbook.save(filename=filename)
 
-    def update_current_payment_amount(self, sheet_name: string, category_name: string, amount: float):
+    def update_current_payment(self, sheet_name: string, category_name: string,
+                               amount: float = None,
+                               paid: bool = None,
+                               due_date: datetime = None):
         for sheet in self._payment_sheets:
             if sheet.name == sheet_name:
                 for cat in sheet.categories:
                     if cat.name == category_name:
                         for pmt in cat.payments:
                             if pmt.due_date.year == date.today().year and pmt.due_date.month == date.today().month:
-                                pmt.amount = amount
-                                cell_local = f'{cat.column}{pmt.excel_row}'
-                                sheet.sheet[cell_local] = amount
-                                # sheet.sheet[cell_local].fill = PatternFill(bgColor=Color(indexed=5),
-                                # fill_type="solid")
+                                cell_amount: Cell = sheet.sheet[f'{cat.column}{pmt.excel_row}']
+                                cell_paid: Cell = sheet.sheet.cell(row=cell_amount.row, column=cell_amount.column + 1)
+                                cell_due_date: Cell = sheet.sheet.cell(row=cell_amount.row,
+                                                                       column=cell_amount.column + 2)
+                                if amount is not None:
+                                    pmt.amount = amount
+                                    cell_amount.value = amount
+                                if paid is not None:
+                                    pmt.paid = paid
+                                    cell_paid.value = int(paid)
+                                if due_date is not None:
+                                    pmt.due_date = due_date
+                                    cell_due_date.value = due_date
+
+                                if pmt.overdue:
+                                    cell_amount.fill = self.redFill
+                                    cell_paid.fill = self.redFill
+                                    cell_due_date.fill = self.redFill
+                                elif pmt.paid:
+                                    cell_amount.fill = self.greenFill
+                                    cell_paid.fill = self.greenFill
+                                    cell_due_date.fill = self.greenFill
+                                else:
+                                    cell_amount.fill = self.yellowFill
+                                    cell_paid.fill = self.yellowFill
+                                    cell_due_date.fill = self.yellowFill
                                 break
                         break
                 break
