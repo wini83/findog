@@ -28,7 +28,9 @@ class PaymentBook:
         for sheet_name, monit_cats in self.monitored_sheets.items():
             if self._workbook.__contains__(sheet_name):
                 payment_sheet = PaymentSheet(self._workbook[sheet_name], sheet_name, monit_cats)
-                payment_sheet.populate_categories()
+                current_row = payment_sheet.get_active_row
+                payment_sheet.populate_categories(current_row)
+                payment_sheet.populate_next_month(current_row)
                 self._payment_sheets.append(payment_sheet)
 
     def save_to_file(self, filename):
@@ -38,6 +40,7 @@ class PaymentBook:
                                amount: float = None,
                                paid: bool = None,
                                due_date: datetime = None):
+        # TODO: refactor
         for sheet in self._payment_sheets:
             if sheet.name == sheet_name:
                 for cat in sheet.categories:
@@ -58,18 +61,7 @@ class PaymentBook:
                                     pmt.due_date = due_date
                                     cell_due_date.value = due_date
 
-                                if pmt.overdue:
-                                    cell_amount.fill = self.redFill
-                                    cell_paid.fill = self.redFill
-                                    cell_due_date.fill = self.redFill
-                                elif pmt.paid:
-                                    cell_amount.fill = self.greenFill
-                                    cell_paid.fill = self.greenFill
-                                    cell_due_date.fill = self.greenFill
-                                else:
-                                    cell_amount.fill = self.yellowFill
-                                    cell_paid.fill = self.yellowFill
-                                    cell_due_date.fill = self.yellowFill
+                                sheet.format_payment(cell_amount.column, pmt)
                                 break
                         break
                 break
