@@ -11,6 +11,8 @@ from payment_category import PaymentCategory
 
 from typing import List
 
+from copy import copy
+
 RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
 GREEN_FILL = PatternFill(fill_type='solid', start_color="00FF00")
 YELLOW_FILL = PatternFill(fill_type='solid', start_color=Color(indexed=5))
@@ -122,6 +124,7 @@ class PaymentSheet:
     def _populate_next_month_payments(self, current_row: int):
         for category in self.categories:
             current_amount_cell: Cell = self.sheet[f'{category.column}{current_row}']
+            current_paid_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 1)
             current_duedate_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 2)
 
             next_amount_cell: Cell = self.sheet[f'{category.column}{current_row + 1}']
@@ -129,14 +132,23 @@ class PaymentSheet:
             next_duedate_cell = self.sheet.cell(row=current_row + 1, column=current_amount_cell.col_idx + 2)
             if next_amount_cell.value is None:
                 next_amount_cell.value = current_amount_cell.value
+                next_amount_cell.number_format = current_amount_cell.number_format
+                next_amount_cell.font = copy(current_amount_cell.font)
+                next_amount_cell.border = copy(current_amount_cell.border)
             next_amount_cell.fill = BLUE_FILL
 
             if next_paid_cell.value is None:
                 next_paid_cell.value = 0
+                next_paid_cell.number_format = current_paid_cell.number_format
+                next_paid_cell.font = copy(current_paid_cell.font)
+                next_paid_cell.border = copy(current_paid_cell.border)
             next_paid_cell.fill = BLUE_FILL
 
             if next_duedate_cell.value is None:
                 next_duedate_cell.value = add_months(current_duedate_cell.value, 1)
+                next_duedate_cell.number_format = current_duedate_cell.number_format
+                next_duedate_cell.font = copy(current_duedate_cell.font)
+                next_duedate_cell.border = copy(current_duedate_cell.border)
             next_duedate_cell.fill = BLUE_FILL
         pass
 
@@ -153,7 +165,7 @@ class PaymentSheet:
         next_month_date = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
         if cell_next_month.value is None:
             cell_next_month.value = next_month_date
-            cell_next_month.style = self.sheet.cell(column=1, row=current_row).style
+            cell_next_month.number_format = self.sheet.cell(column=1, row=current_row).number_format
             cell_next_month.fill = BLUE_FILL
             process = True
         elif cell_next_month.value == next_month_date:
