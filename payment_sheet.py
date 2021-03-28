@@ -113,8 +113,6 @@ class PaymentSheet:
             cell_due_date.fill = BLUE_FILL
 
     def populate_next_month(self, current_row: int):
-        # TODO:add some logic
-
         proceed_further = self._process_next_month_cell(current_row)
         if proceed_further:
             self._process_next_sum(current_row)
@@ -152,26 +150,46 @@ class PaymentSheet:
             next_duedate_cell.fill = BLUE_FILL
         pass
 
+    def _generate_sum_string(self, row: int):
+        result = "=SUM("
+        counter: int = 0
+        for column_str in self._monitored_cols:
+            if counter > 0:
+                result += ","
+            result += f'{column_str}{row}'
+            counter += 1
+        result += ")"
+        return result
+
+    # noinspection PyDunderSlots,PyUnresolvedReferences
     def _process_next_sum(self, current_row):
         cell_this_month_sum: Cell = self.sheet.cell(column=2, row=current_row)
         cell_next_month_sum: Cell = self.sheet.cell(column=2, row=current_row + 1)
-        print(f'{cell_this_month_sum.value} - {cell_next_month_sum}')
+        if cell_next_month_sum.value is None:
+            cell_next_month_sum.value = self._generate_sum_string(current_row)
+            cell_next_month_sum.number_format = cell_this_month_sum.number_format
+            cell_next_month_sum.font = copy(cell_this_month_sum.font)
+            cell_next_month_sum.border = copy(cell_this_month_sum.border)
+            cell_next_month_sum.fill = BLUE_FILL
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     def _process_next_month_cell(self, current_row):
         cell_next_month: Cell = self.sheet.cell(column=1, row=current_row + 1)
+        cell_this_month: Cell = self.sheet.cell(column=1, row=current_row)
         now = datetime.now()
         now = datetime(year=now.year, month=now.month, day=now.day)
         next_month_date = (now.replace(day=1) + timedelta(days=32)).replace(day=1)
         if cell_next_month.value is None:
             cell_next_month.value = next_month_date
             cell_next_month.number_format = self.sheet.cell(column=1, row=current_row).number_format
+            cell_next_month.number_format = cell_this_month.number_format
+            cell_next_month.font = copy(cell_this_month.font)
+            cell_next_month.border = copy(cell_this_month.border)
             cell_next_month.fill = BLUE_FILL
             process = True
         elif cell_next_month.value == next_month_date:
             cell_next_month.fill = BLUE_FILL
             process = True
         else:
-            print(f'{self.name} - {cell_next_month.value} ')
             process = False
         return process
