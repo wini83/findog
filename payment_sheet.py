@@ -14,7 +14,7 @@ from typing import List
 from copy import copy
 
 RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
-GREEN_FILL = PatternFill(fill_type='solid', start_color="00FF00")
+GREEN_FILL = PatternFill(fill_type='solid', start_color="92D050")
 YELLOW_FILL = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 BLUE_FILL = PatternFill(fill_type='solid', start_color="6ED1FE")
 
@@ -88,6 +88,19 @@ class PaymentSheet:
 
             self._categories.append(item)
             self.format_payment(column_int, new_payment)
+        self._format_this_month_cells(active_row)
+
+    # noinspection PyDunderSlots,PyUnresolvedReferences
+    def _format_this_month_cells(self, active_row: int):
+        cell_this_month_sum: Cell = self.sheet.cell(column=2, row=active_row)
+        cell_this_month: Cell = self.sheet.cell(column=1, row=active_row)
+        cell_this_month.fill = YELLOW_FILL
+        cell_this_month_sum.fill = YELLOW_FILL
+        # TODO:Add checks
+        cell_previous_month_sum: Cell = self.sheet.cell(column=2, row=active_row - 1)
+        cell_previous_month: Cell = self.sheet.cell(column=1, row=active_row - 1)
+        cell_previous_month.fill = GREEN_FILL
+        cell_previous_month_sum.fill = GREEN_FILL
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     def format_payment(self, column: int, payment: Payment):

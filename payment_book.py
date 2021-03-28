@@ -15,8 +15,9 @@ class PaymentBook:
     _payment_sheets: List[PaymentSheet] = None
     _workbook: Workbook = None
     _monitored_sheets = None
+    # TODO: move to const
     redFill = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
-    greenFill = PatternFill(fill_type='solid', start_color="00FF00")
+    greenFill = PatternFill(fill_type='solid', start_color="92D050")
     yellowFill = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 
     def __init__(self, monitored_sheets):
