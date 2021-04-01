@@ -34,7 +34,8 @@ def notify_ongoing_payments(payment_book: PaymentBook, pu: Pushover, rundry: boo
 @click.option("--rundry", is_flag=True, help="Run without notifications", default=False)
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
 @click.option("--noexcel", is_flag=True, help="Run without Excel file", default=False)
-def main(rundry, noekart, noexcel):
+@click.option("--nocommit", is_flag=True, help="Run without commiting file to dropbox", default=False)
+def main(rundry, noekart, noexcel,nocommit):
     """
 A simple program to keep your payments in check
     """
@@ -51,7 +52,8 @@ A simple program to keep your payments in check
         if not noekart:
             ekartoteka_run(pu, rundry, wpk)
         wpk.save_to_file(filename="Oplaty.xlsm")
-
+        if not nocommit:
+            dbx.commit_file("Oplaty.xlsm", config.excel_file_path)
 
 def ekartoteka_run(pu, rundry, wpk):
     ekart = Ekartoteka(config.ekartoteka)
