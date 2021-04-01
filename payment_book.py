@@ -30,8 +30,9 @@ class PaymentBook:
             if self._workbook.__contains__(sheet_name):
                 payment_sheet = PaymentSheet(self._workbook[sheet_name], sheet_name, monit_cats)
                 current_row = payment_sheet.get_active_row
-                payment_sheet.populate_categories(current_row)
-                payment_sheet.populate_next_month(current_row)
+                if current_row > 1:
+                    payment_sheet.populate_categories(current_row)
+                    payment_sheet.populate_next_month(current_row)
                 self._payment_sheets.append(payment_sheet)
 
     def save_to_file(self, filename):

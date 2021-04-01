@@ -64,14 +64,19 @@ class PaymentSheet:
         current_month = datetime.now().month
         current_year = datetime.now().year
         current_row = 2
+        found:bool = False
         while self._sheet[f"A{current_row}"].value is not None:
             date_item = self._sheet[f"A{current_row}"].value
             if (date_item.month == current_month) and (date_item.year == current_year):
+                found = True
                 break
             current_row += 1
+        if not found:
+            current_row = -1
         return current_row
 
     def populate_categories(self, active_row: int):
+        # TODO:secure
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
             item: PaymentCategory = PaymentCategory(name=name, column=column)
