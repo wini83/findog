@@ -1,16 +1,13 @@
-import json
 from datetime import datetime
-from typing import List
+
+import click
 
 import config
 from dropbox_client import DropboxClient
 from ekartoteka import Ekartoteka
 from mailer import Mailer
 from payment_book import PaymentBook
-from payment_list_item import PaymentListItem
 from pushover import Pushover
-import click
-
 
 
 @click.command()
@@ -27,7 +24,7 @@ A simple program to keep your payments in check
                            bold=True,
                            bg="yellow",
                            blink=True))
-    print(f'{"="*60}')
+    print(f'{"=" * 60}')
     pu = Pushover(config.pushover_apikey, config.pushover_user)
     dbx = DropboxClient(config.api_key)
     if not noexcel:
@@ -37,7 +34,7 @@ A simple program to keep your payments in check
             ekartoteka_run(pu, rundry, wpk)
         wpk.save_to_file(filename="Oplaty.xlsm")
 
-        mailer = Mailer(config.gmail_user,config.gmail_pass,wpk)
+        mailer = Mailer(config.gmail_user, config.gmail_pass, wpk)
         mailer.login()
         mailer.send(config.recipient_email)
 

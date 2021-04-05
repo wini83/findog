@@ -9,7 +9,7 @@
 
     <ul>
     {% for payment in data %}
-    <li>{{ payment['duedate'] }} {{ payment['category'] }} {{ payment['amount'] }}zł  {{ payment['sheet'] }} </li>
+    <li>{{ payment['duedate'] }} {{ payment['category'] }} <b> {{ payment['amount'] }}zł </b> {{ payment['sheet'] }} </li>
     {% endfor %}
   </ul>
 
