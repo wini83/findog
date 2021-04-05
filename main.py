@@ -1,11 +1,14 @@
 from datetime import datetime
+from typing import List
 
 import config
 from dropbox_client import DropboxClient
 from ekartoteka import Ekartoteka
 from payment_book import PaymentBook
+from payment_list_item import PaymentListItem
 from pushover import Pushover
 import click
+import payment_book as pb
 
 
 @click.command()
@@ -31,6 +34,14 @@ A simple program to keep your payments in check
         if not noekart:
             ekartoteka_run(pu, rundry, wpk)
         wpk.save_to_file(filename="Oplaty.xlsm")
+        print(f'{"=" * 60}')
+        flatlist: List[PaymentListItem] = wpk.payment_list
+        for list_item in flatlist:
+            print(list_item)
+        print(f'{"=" * 60}')
+        flatlist_sorted = pb.sort_payment_list_by_date(flatlist)
+        for list_item2 in flatlist_sorted:
+            print(list_item2)
         if not nocommit:
             dbx.commit_file("Oplaty.xlsm", config.excel_file_path)
 

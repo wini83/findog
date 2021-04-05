@@ -14,12 +14,23 @@ class PaymentListItem:
         self._sheet = sheet
 
     @property
-    def payment(self):
-        return self.payment
+    def payment(self) -> Payment:
+        return self._payment
 
     @property
-    def category(self):
-        return self.category
+    def category(self) -> PaymentCategory:
+        return self._category
 
-    def sheet(self):
+    @property
+    def sheet(self) -> PaymentSheet:
         return self._sheet
+
+    def __str__(self):
+        result: str = ""
+        if self.sheet is not None:
+            result += self._sheet.name
+        if self.category is not None:
+            result = f'{result} >> {self._category.name}'
+        if self._payment is not None:
+            result = f'{result} >> {self._payment}'
+        return result

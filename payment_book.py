@@ -1,13 +1,18 @@
 import string
 from datetime import date, datetime
 from io import BytesIO
-from typing import Dict
+from typing import Dict, List
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.cell import Cell
 
+from payment_list_item import PaymentListItem
 from payment_sheet import PaymentSheet
+
+
+def sort_payment_list_by_date(item_list:List[PaymentListItem]):
+    return sorted(item_list, key=lambda x: x.payment.due_date, reverse=False)
 
 
 class PaymentBook:
@@ -62,6 +67,15 @@ class PaymentBook:
                         cell_due_date.value = due_date
                         sheet.format_payment(cell_amount.column, pmt)
 
+    @property
+    def payment_list(self):
+        result: List[PaymentListItem] = []
+        for sheet in self._payment_sheets.values():
+            for category in sheet.categories.values():
+                for payment in category.payments.values():
+                    new_item: PaymentListItem = PaymentListItem(payment, category, sheet)
+                    result.append(new_item)
+        return result
 
     @property
     def sheets(self):
