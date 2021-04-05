@@ -9,7 +9,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from payment import Payment
 from payment_category import PaymentCategory
 
-from typing import List
+from typing import List, Dict
 
 from copy import copy
 
@@ -30,11 +30,11 @@ def add_months(sourcedate: datetime, months: int):
 class PaymentSheet:
     _sheet: Worksheet = None
     _name: string = None
-    _categories: List[PaymentCategory] = None
+    _categories: Dict[str, PaymentCategory] = None
     _monitored_cols: List[str] = None
 
     def __init__(self, worksheet: Worksheet, name: string, monitored_cols: List[str]):
-        self._categories = []
+        self._categories = {}
         self._sheet = worksheet
         self._name = name
         self._monitored_cols = monitored_cols
@@ -48,7 +48,7 @@ class PaymentSheet:
         self._monitored_cols = value
 
     @property
-    def categories(self) -> List[PaymentCategory]:
+    def categories(self) -> Dict[str, PaymentCategory]:
         return self._categories
 
     @property
@@ -64,7 +64,7 @@ class PaymentSheet:
         current_month = datetime.now().month
         current_year = datetime.now().year
         current_row = 2
-        found:bool = False
+        found: bool = False
         while self._sheet[f"A{current_row}"].value is not None:
             date_item = self._sheet[f"A{current_row}"].value
             if (date_item.month == current_month) and (date_item.year == current_year):
@@ -87,11 +87,11 @@ class PaymentSheet:
             except ValueError:
                 paid = False
 
-            due_date = self._sheet.cell(column=column_int + 2, row=active_row).value
+            due_date: datetime = self._sheet.cell(column=column_int + 2, row=active_row).value
             new_payment = Payment(paid=paid, due_date=due_date, amount=amount, excel_row=active_row)
-            item.payments.append(new_payment)
+            item.payments[f'{due_date.year}-{due_date.month}'] = new_payment
 
-            self._categories.append(item)
+            self._categories[item.name] = item
             self.format_payment(column_int, new_payment)
         self._format_this_month_cells(active_row)
 
@@ -138,7 +138,7 @@ class PaymentSheet:
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     def _populate_next_month_payments(self, current_row: int):
-        for category in self.categories:
+        for category in self.categories.values():
             current_amount_cell: Cell = self.sheet[f'{category.column}{current_row}']
             current_paid_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 1)
             current_duedate_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 2)

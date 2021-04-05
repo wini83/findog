@@ -8,34 +8,12 @@ from pushover import Pushover
 import click
 
 
-def download_file(dbx: DropboxClient):
-    downloaded_bytes = dbx.retrieve_file(config.excel_file_path)
-    payment_book: PaymentBook = PaymentBook(config.monitored_sheets)
-    payment_book.load_from_file(downloaded_bytes)
-    print("-----------------------------------------")
-
-    for name, mk in config.monitored_sheets.items():
-        print(f'{name} - {mk}')
-
-    print("-----------------------------------------")
-    return payment_book
-
-
-def notify_ongoing_payments(payment_book: PaymentBook, pu: Pushover, rundry: bool):
-    for payment_sheet in payment_book.sheets:
-        cats = payment_sheet.categories
-        for category in cats:
-            print(f"{payment_sheet.name}:{category} - {(category.payments[0])}")
-            if category.payments[0].payable_within_2days and not rundry:
-                pu.notify(f"{category} - {(category.payments[0])}")
-
-
 @click.command()
 @click.option("--rundry", is_flag=True, help="Run without notifications", default=False)
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
 @click.option("--noexcel", is_flag=True, help="Run without Excel file", default=False)
 @click.option("--nocommit", is_flag=True, help="Run without commiting file to dropbox", default=False)
-def main(rundry, noekart, noexcel,nocommit):
+def main(rundry, noekart, noexcel, nocommit):
     """
 A simple program to keep your payments in check
     """
@@ -44,10 +22,11 @@ A simple program to keep your payments in check
                            bold=True,
                            bg="yellow",
                            blink=True))
+    print(f'{"="*60}')
     pu = Pushover(config.pushover_apikey, config.pushover_user)
     dbx = DropboxClient(config.api_key)
     if not noexcel:
-        wpk = download_file(dbx=dbx)
+        wpk = process_file(dbx=dbx)
         notify_ongoing_payments(wpk, pu, rundry)
         if not noekart:
             ekartoteka_run(pu, rundry, wpk)
@@ -55,11 +34,39 @@ A simple program to keep your payments in check
         if not nocommit:
             dbx.commit_file("Oplaty.xlsm", config.excel_file_path)
 
+
+def process_file(dbx: DropboxClient):
+    downloaded_bytes = dbx.retrieve_file(config.excel_file_path)
+    payment_book: PaymentBook = PaymentBook(config.monitored_sheets)
+    payment_book.load_and_process(downloaded_bytes)
+    print("Monitored Columns")
+    for name, mk in config.monitored_sheets.items():
+        print(f'{name} - {mk}')
+    print(f'{"=" * 60}')
+    return payment_book
+
+
+def notify_ongoing_payments(payment_book: PaymentBook, pu: Pushover, rundry: bool):
+    print("Notify payments payable in 2 days ")
+    for payment_sheet in payment_book.sheets.values():
+        cats = payment_sheet.categories.values()
+        for category in cats:
+            current_key = f'{datetime.now().year}-{datetime.now().month}'
+            notify_payload = f"{payment_sheet.name}:{category} " \
+                             f"- {(category.payments[current_key])}"
+
+            if category.payments[current_key].payable_within_2days:
+                print(notify_payload)
+                if not rundry:
+                    pu.notify(notify_payload)
+    print(f'{"=" * 60}')
+
+
 def ekartoteka_run(pu, rundry, wpk):
     ekart = Ekartoteka(config.ekartoteka)
     ekart.initialize()
     apartment_fee = ekart.get_curret_fees_sum()
-    print("-----------------------------------")
+    print("---------- Ekartoteka ---------------------------")
     print(f'Mieszkanie: {apartment_fee:.2f}zł')
     res_setl, delta = ekart.get_settlements_sum(datetime.now().year)
     if not rundry:
