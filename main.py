@@ -90,6 +90,10 @@ def ekartoteka_run(pu, rundry, wpk):
     else:
         paid = None
 
+    now = datetime.now()
+    # TODO: recognition of Ekartoteka update
+    if now.day < 8:
+        paid = None
     wpk.update_current_payment(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee, paid=paid)
 
 
