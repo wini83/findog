@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import click
 
 import config
@@ -7,7 +5,7 @@ from dropbox_client import DropboxClient
 from ekartoteka import Ekartoteka
 from mailer import Mailer
 from payment_book import PaymentBook
-from pushover import Pushover
+from pushover import Pushover, PushoverNotifier
 
 
 @click.command()
@@ -29,17 +27,25 @@ A simple program to keep your payments in check
     dbx = DropboxClient(config.api_key)
     if not noexcel:
         wpk = process_file(dbx=dbx)
+        print(f'{"=" * 60}')
         notify_ongoing_payments(wpk, pu, rundry)
+        print(f'{"=" * 60}')
         if not noekart:
             ekartoteka_run(pu, rundry, wpk)
+            print(f'{"=" * 60}')
         wpk.save_to_file(filename="Oplaty.xlsm")
 
-        mailer = Mailer(config.gmail_user, config.gmail_pass, wpk)
-        mailer.login()
-        mailer.send(config.recipient_email)
+        if not rundry:
+            print("Sending Mail")
+            mailer = Mailer(config.gmail_user, config.gmail_pass, wpk)
+            mailer.login()
+            mailer.send(config.recipient_email)
+            print(f'{"=" * 60}')
 
         if not nocommit:
+            print("Commiting file")
             dbx.commit_file("Oplaty.xlsm", config.excel_file_path)
+            print(f'{"=" * 60}')
 
 
 def process_file(dbx: DropboxClient):
@@ -49,52 +55,28 @@ def process_file(dbx: DropboxClient):
     print("Monitored Columns")
     for name, mk in config.monitored_sheets.items():
         print(f'{name} - {mk}')
-    print(f'{"=" * 60}')
     return payment_book
 
 
 def notify_ongoing_payments(payment_book: PaymentBook, pu: Pushover, rundry: bool):
     print("Notify payments payable in 2 days ")
-    for payment_sheet in payment_book.sheets.values():
-        cats = payment_sheet.categories.values()
-        for category in cats:
-            current_key = f'{datetime.now().year}-{datetime.now().month}'
-            notify_payload = f"{payment_sheet.name}:{category} " \
-                             f"- {(category.payments[current_key])}"
-
-            if category.payments[current_key].payable_within_2days:
-                print(notify_payload)
-                if not rundry:
-                    pu.notify(notify_payload)
-    print(f'{"=" * 60}')
+    pun = PushoverNotifier(pushover=pu, payment_book=payment_book)
+    pun.login()
+    pun_str = pun.notify_ongoing_payments(rundry)
+    if pun_str == "":
+        pun_str = "None :)"
+    print(pun_str)
 
 
 def ekartoteka_run(pu, rundry, wpk):
-    ekart = Ekartoteka(config.ekartoteka)
-    ekart.initialize()
-    apartment_fee = ekart.get_curret_fees_sum()
-    print("---------- Ekartoteka ---------------------------")
-    print(f'Mieszkanie: {apartment_fee:.2f}zł')
-    res_setl, delta = ekart.get_settlements_sum(datetime.now().year)
+    print("Ekartoteka")
+    ekart = Ekartoteka(config.ekartoteka, wpk)
+    ekart.login()
+    apartment_fee, delta = ekart.update_payment_book(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1])
+    ekart_str = f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł'
+    print(ekart_str)
     if not rundry:
-        if res_setl:
-            pu.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
-        else:
-            pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
-
-    if res_setl and delta is not None:
-        if delta > 0:
-            paid = False
-        else:
-            paid = True
-    else:
-        paid = None
-
-    now = datetime.now()
-    # TODO: recognition of Ekartoteka update
-    if now.day < 8:
-        paid = None
-    wpk.update_current_payment(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee, paid=paid)
+        pu.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
 
 
 if __name__ == '__main__':

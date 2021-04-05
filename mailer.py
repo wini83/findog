@@ -1,10 +1,11 @@
+from Client import Client
 from gmail_adapter import GmailAdapter
 from messages import DailyMessage
 from payment_book import PaymentBook
 import payment_book as pb
 
 
-class Mailer:
+class Mailer(Client):
     adapter: GmailAdapter = None
     book: PaymentBook = None
 

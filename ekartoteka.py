@@ -7,13 +7,16 @@ from json import JSONDecodeError
 from urllib import request
 from urllib.error import URLError
 
+from Client import Client
+from payment_book import PaymentBook
+
 
 def seconds_from_epoch() -> int:
     from_epoch = datetime.now().timestamp().__floor__()
     return int(from_epoch)
 
 
-class Ekartoteka:
+class Ekartoteka(Client):
     URL_SETTLEMENTS = "https://e-kartoteka.pl/api/rozrachunki/konta/?id_a_do={}&id_kli={}&rok={}"
     URL_TOKEN = "https://e-kartoteka.pl/api/api-token-auth/"
     URL_ME = "https://e-kartoteka.pl/api/uzytkownicy/uzytkownicy/me/"
@@ -27,8 +30,10 @@ class Ekartoteka:
     user_id: int
     client_id: int
     token_expire: int
+    _payment_book: PaymentBook = None
 
-    def __init__(self, creditentials):
+    def __init__(self, creditentials, payment_book: PaymentBook):
+        self._payment_book = payment_book
         self._creditentials = creditentials
 
     def _get_token(self):
@@ -85,7 +90,7 @@ class Ekartoteka:
             print("Wrong key")
             return False
 
-    def initialize(self):
+    def login(self):
         self._get_token()
         self._get_me()
         self._decode_token()
@@ -120,7 +125,6 @@ class Ekartoteka:
             for position in positions:
                 balance += position["Ma"] - position["Wn"]
             return True, balance
-
 
     def get_premises_data(self):
         if self.token is None:
@@ -160,3 +164,22 @@ class Ekartoteka:
             return False, "Response is not Json;"
         except ValueError:
             return False, "Wrong response structure"
+
+    def update_payment_book(self, sheet_name: str, category_name: str):
+        # TODO: not initialized
+        apartment_fee = self.get_curret_fees_sum()
+        res_setl, delta = self.get_settlements_sum(datetime.now().year)
+
+        if res_setl and delta is not None:
+            if delta > 0:
+                paid = False
+            else:
+                paid = True
+        else:
+            paid = None
+        now = datetime.now()
+        # TODO: recognition of Ekartoteka update
+        if now.day < 8:
+            paid = None
+        self._payment_book.update_current_payment(sheet_name, category_name, amount=apartment_fee, paid=paid)
+        return apartment_fee, delta

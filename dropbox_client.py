@@ -4,10 +4,15 @@ import dropbox
 from dropbox.exceptions import ApiError
 from dropbox.files import WriteMode
 
+from Client import Client
 
-class DropboxClient:
+
+class DropboxClient(Client):
     _api_key: string = None
     _dbx: dropbox.Dropbox = None
+
+    def login(self):
+        pass
 
     def __init__(self, api_key: string):
         self._api_key = api_key
