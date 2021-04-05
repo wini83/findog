@@ -25,6 +25,11 @@ class PaymentListItem:
     def sheet(self) -> PaymentSheet:
         return self._sheet
 
+    def to_dict(self):
+        return {'sheet': self._sheet.name, 'category': self._category.name,
+                'amount': self._payment.amount, 'paid': self._payment.paid,
+                'duedate': self._payment.due_date.strftime("%Y-%m-%d")}
+
     def __str__(self):
         result: str = ""
         if self.sheet is not None:

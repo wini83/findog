@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>findog - Daily Report</h1>
+
+    <ul>
+    {% for payment in data %}
+    <li>{{ payment['duedate'] }} {{ payment['category'] }} {{ payment['amount'] }}zł  {{ payment['sheet'] }} </li>
+    {% endfor %}
+  </ul>
+
+</body>
+</html>

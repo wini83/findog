@@ -3,3 +3,4 @@ dropbox
 openpyxl
 click
 colorama
+jinja2

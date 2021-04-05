@@ -11,8 +11,15 @@ from payment_list_item import PaymentListItem
 from payment_sheet import PaymentSheet
 
 
-def sort_payment_list_by_date(item_list:List[PaymentListItem]):
+def sort_payment_list_by_date(item_list:List[PaymentListItem]) -> List[PaymentListItem]:
     return sorted(item_list, key=lambda x: x.payment.due_date, reverse=False)
+
+
+def make_json_payments(item_list:List[PaymentListItem]):
+    result = []
+    for item3 in item_list:
+        result.append(item3.to_dict())
+    return result
 
 
 class PaymentBook:
