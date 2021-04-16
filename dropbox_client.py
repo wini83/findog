@@ -6,6 +6,8 @@ from dropbox.files import WriteMode
 
 from Client import Client
 
+from loguru import logger
+
 
 class DropboxClient(Client):
     _api_key: string = None

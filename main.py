@@ -3,6 +3,9 @@ import click
 from context import HandlerContext
 from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
     FileDownloadHandler, FileProcessHandler, FileCommitHandler
+from loguru import logger
+
+logger.add("findog.log", rotation="1 week")
 
 
 @click.command()
@@ -18,7 +21,8 @@ A simple program to keep your payments in check
                            bold=True,
                            bg="yellow",
                            blink=True))
-    print(f'{"=" * 60}')
+    click.echo(f'{"=" * 60}')
+    logger.info("Findog - simple program to keep your payments in check")
     ctx = HandlerContext(silent=silent)
     fd = FileDownloadHandler()
     fp = FileProcessHandler()
@@ -43,8 +47,6 @@ A simple program to keep your payments in check
 
     if not nocommit:
         handler = handler.set_next(fc)
-
-    print(type(handler))
 
     fd.handle(ctx)
 
