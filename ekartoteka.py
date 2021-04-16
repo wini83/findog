@@ -123,7 +123,7 @@ class Ekartoteka(Client):
             # print(positions)
             balance = 0.0
             for position in positions:
-                balance += position["Ma"] - position["Wn"]
+                balance += position["Wn"] - position["Ma"]
             return True, balance
 
     def get_premises_data(self):
