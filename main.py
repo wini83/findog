@@ -5,7 +5,11 @@ from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandle
     FileDownloadHandler, FileProcessHandler, FileCommitHandler
 from loguru import logger
 
+from os import chdir, path
+
 logger.add("findog.log", rotation="1 week")
+
+chdir(path.dirname(path.abspath(__file__)))
 
 
 @click.command()
