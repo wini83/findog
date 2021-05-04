@@ -7,9 +7,11 @@ from loguru import logger
 
 from os import chdir, path
 
+chdir(path.dirname(path.abspath(__file__)))
+
 logger.add("findog.log", rotation="1 week")
 
-chdir(path.dirname(path.abspath(__file__)))
+
 
 
 @click.command()
