@@ -113,7 +113,7 @@ class EkartotekaHandler(AbstractHandler):
         apartment_fee, delta = ekart.update_payment_book(context.ekartoteka_sheet[0], context.ekartoteka_sheet[1])
         ekart_str = f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł'
         logger.info(ekart_str)
-        if not context.silent:
+        if not context.silent and delta != 0:
             context.pushover.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
         return super().handle(context)
 
