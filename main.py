@@ -12,8 +12,6 @@ chdir(path.dirname(path.abspath(__file__)))
 logger.add("findog.log", rotation="1 week")
 
 
-
-
 @click.command()
 @click.option("--silent", is_flag=True, help="Run without notifications", default=False)
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)

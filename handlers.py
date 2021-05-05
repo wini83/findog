@@ -58,6 +58,7 @@ class FileDownloadHandler(AbstractHandler):
                 logger.info(f"File {context.excel_file_path} downloaded")
                 return super().handle(context)
             except Exception as e:
+                # TODO: narrow excepion
                 logger.exception("Problem with download")
                 sys.exit(1)
 
