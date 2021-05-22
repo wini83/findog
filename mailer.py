@@ -26,7 +26,7 @@ class Mailer(Client):
         else:
             raise NotImplementedError()
 
-    def send(self, recipient_email: str):
+    def render(self) ->str:
         report = DailyMessage()
         data = self.book.payment_list
         data = pb.sort_payment_list_by_date(data)
@@ -35,8 +35,10 @@ class Mailer(Client):
             if not pmt.payment.paid:
                 data2.append(pmt)
         data_json = pb.make_json_payments(data2)
+        return report.render(data=data_json)
 
+    def send(self, recipient_email: str, content: str):
         if self.adapter is not None:
             self.adapter.send_mail(recipient_email=recipient_email,
                                    subject="Findog Daily Report",
-                                   content=report.render(data=data_json))
+                                   content=content)

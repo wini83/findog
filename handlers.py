@@ -134,12 +134,18 @@ class SaveFileLocallyHandler(AbstractHandler):
 
 
 class MailingHandler(AbstractHandler):
+    rundry: bool = False
+
     def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info(f"There are {len(context.recipients)} mail(s) to send")
+
         mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
         mailer.login()
+        logger.info("Rendering message")
+        payload = mailer.render()
+        logger.info("Rendering completed")
+        logger.info(f"There are {len(context.recipients)} mail(s) to send")
         for recipient in context.recipients:
-            mailer.send(recipient)
+            mailer.send(recipient,payload)
             logger.info(f"mail to {recipient} send")
         logger.info("sending mail completed")
         return super().handle(context)
