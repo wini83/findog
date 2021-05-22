@@ -143,11 +143,15 @@ class MailingHandler(AbstractHandler):
         logger.info("Rendering message")
         payload = mailer.render()
         logger.info("Rendering completed")
-        logger.info(f"There are {len(context.recipients)} mail(s) to send")
-        for recipient in context.recipients:
-            mailer.send(recipient,payload)
-            logger.info(f"mail to {recipient} send")
-        logger.info("sending mail completed")
+        if not self.rundry:
+            logger.info(f"There are {len(context.recipients)} mail(s) to send")
+            for recipient in context.recipients:
+                mailer.send(recipient, payload)
+                logger.info(f"mail to {recipient} send")
+            logger.info("sending mail completed")
+        else:
+            with open("output_mail.html", "wb") as html_file:
+                html_file.write(payload.encode('utf-8'))
         return super().handle(context)
 
     def __str__(self):

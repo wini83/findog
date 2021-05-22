@@ -75,7 +75,7 @@ class PaymentBook:
                         sheet.format_payment(cell_amount.column, pmt)
 
     @property
-    def payment_list(self):
+    def payment_list(self) -> List[PaymentListItem]:
         result: List[PaymentListItem] = []
         for sheet in self._payment_sheets.values():
             for category in sheet.categories.values():

@@ -7,6 +7,8 @@
 <body>
 <h1>findog - Daily Report</h1>
 
+<p>Sum total: <strong>{{sum_total}} zł</strong></p>
+<p>Sum unpaid: <strong>{{sum_unpaid}} zł</strong></p>
     <ul>
     {% for payment in data %}
     <li>{{ payment['duedate'] }} {{ payment['category'] }} <b> {{ payment['amount'] }}zł </b> {{ payment['sheet'] }} </li>
