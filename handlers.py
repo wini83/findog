@@ -92,7 +92,7 @@ class NotifyOngoingHandler(AbstractHandler):
         i: int = 0
         for item in pmt_list:
             if item.payment.payable_within_2days:
-                new_str = item.__str__() + os.linesep
+                new_str = item.__str__() + "\n"
                 payload += new_str
                 i += 1
         if i > 0:
