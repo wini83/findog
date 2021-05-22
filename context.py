@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from dropbox_client import DropboxClient
 from payment_book import PaymentBook
@@ -15,7 +15,7 @@ class HandlerContext:
     ekartoteka_creditentials: Any
     ekartoteka_sheet: Any
     silent: bool
-    recipient_email: str
+    recipients: List[str]
     gmail_user: str
     gmail_pass: str
 
@@ -27,6 +27,6 @@ class HandlerContext:
         self.ekartoteka_creditentials = config.ekartoteka
         self.ekartoteka_sheet = config.ekartoteka_sheet
         self.silent = silent
-        self.recipient_email = config.recipient_email
+        self.recipients = config.recipients
         self.gmail_user = config.gmail_user
         self.gmail_pass = config.gmail_pass

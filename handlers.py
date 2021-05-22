@@ -135,11 +135,13 @@ class SaveFileLocallyHandler(AbstractHandler):
 
 class MailingHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Sending Mail")
+        logger.info(f"There are {len(context.recipients)} mail(s) to send")
         mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
         mailer.login()
-        mailer.send(context.recipient_email)
-        logger.info("Mail sent")
+        for recipient in context.recipients:
+            mailer.send(recipient)
+            logger.info(f"mail to {recipient} send")
+        logger.info("sending mail completed")
         return super().handle(context)
 
     def __str__(self):
