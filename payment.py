@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 
 
 class Payment:
@@ -42,3 +43,8 @@ class Payment:
             return True
         else:
             return False
+
+    @property
+    def b_days_left(self) -> int:
+        today = datetime.datetime.now()
+        return np.busday_count(f'{today:%Y-%m-%d}', f'{self.due_date:%Y-%m-%d}')

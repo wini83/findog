@@ -5,3 +5,4 @@ click
 colorama
 jinja2
 loguru
+numpy

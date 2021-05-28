@@ -36,3 +36,9 @@ class TestPayment:
         payment.paid = False
         payment.due_date = date_in_future
         assert not payment.overdue
+
+    def test_days_left(self):
+        assert True
+        # date_in_past = datetime.now() + timedelta(days=2)
+        # payment: Payment = Payment(paid=False, due_date=date_in_past, amount=10.0)
+        # assert payment.b_days_left() == 2

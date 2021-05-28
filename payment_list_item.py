@@ -28,7 +28,8 @@ class PaymentListItem:
     def to_dict(self):
         return {'sheet': self._sheet.name, 'category': self._category.name,
                 'amount': self._payment.amount.__round__(2), 'paid': self._payment.paid,
-                'duedate': self._payment.due_date.strftime("%Y-%m-%d")}
+                'duedate': self._payment.due_date.strftime("%Y-%m-%d"),
+                'b_days_left': self._payment.b_days_left}
 
     def __str__(self):
         result: str = ""
