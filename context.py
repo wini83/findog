@@ -4,6 +4,7 @@ from dropbox_client import DropboxClient
 from payment_book import PaymentBook
 from pushover import Pushover
 import config
+import os
 
 
 class HandlerContext:
@@ -12,7 +13,7 @@ class HandlerContext:
     file_object: bytes
     pushover: Pushover
     excel_file_path: str
-    ekartoteka_creditentials: Any
+    ekartoteka_credentials: Any
     ekartoteka_sheet: Any
     silent: bool
     recipients: List[str]
@@ -24,9 +25,13 @@ class HandlerContext:
         self.pushover = Pushover(config.pushover_apikey, config.pushover_user)
         self.payment_book = PaymentBook(config.monitored_sheets)
         self.excel_file_path = config.excel_file_path
-        self.ekartoteka_creditentials = config.ekartoteka
+        self.ekartoteka_credentials = config.ekartoteka
         self.ekartoteka_sheet = config.ekartoteka_sheet
         self.silent = silent
         self.recipients = config.recipients
         self.gmail_user = config.gmail_user
         self.gmail_pass = config.gmail_pass
+
+    @property
+    def excel_file_name(self):
+        return os.path.basename(self.excel_file_path)

@@ -15,9 +15,10 @@ logger.add("findog.log", rotation="1 week")
 @click.command()
 @click.option("--silent", is_flag=True, help="Run without notifications", default=False)
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
-@click.option("--nocommit", is_flag=True, help="Run without commiting file to dropbox", default=False)
+@click.option("--nocommit", is_flag=True, help="Run without committing file to dropbox", default=False)
 @click.option("--mailrundry", is_flag=True, help="Run without sending mail", default=False)
-def main(silent, noekart, nocommit, mailrundry):
+@click.option("--experimental", is_flag=True, help="in experimental mode", default=False)
+def main(silent, noekart, nocommit, mailrundry,experimental):
     """
 A simple program to keep your payments in check
     """
@@ -35,7 +36,7 @@ A simple program to keep your payments in check
     ek = EkartotekaHandler()
     sv = SaveFileLocallyHandler()
     ma = MailingHandler()
-    ma.rundry = mailrundry
+    ma.run_dry = mailrundry
     fc = FileCommitHandler()
 
     handler = fd.set_next(fp)

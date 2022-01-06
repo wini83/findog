@@ -30,10 +30,8 @@ class Ekartoteka(Client):
     user_id: int
     client_id: int
     token_expire: int
-    _payment_book: PaymentBook = None
 
-    def __init__(self, creditentials, payment_book: PaymentBook):
-        self._payment_book = payment_book
+    def __init__(self, creditentials):
         self._creditentials = creditentials
 
     def _get_token(self):
@@ -165,7 +163,7 @@ class Ekartoteka(Client):
         except ValueError:
             return False, "Wrong response structure"
 
-    def update_payment_book(self, sheet_name: str, category_name: str):
+    def get_payment_status(self):
         # TODO: not initialized
         apartment_fee = self.get_curret_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
@@ -181,5 +179,4 @@ class Ekartoteka(Client):
         # TODO: recognition of Ekartoteka update
         if now.day < 8:
             paid = None
-        self._payment_book.update_current_payment(sheet_name, category_name, amount=apartment_fee, paid=paid)
-        return apartment_fee, delta
+        return apartment_fee, delta, paid

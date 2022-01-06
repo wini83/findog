@@ -1,13 +1,12 @@
-import os
 import sys
 from abc import ABC, abstractmethod
+
+from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
 from mailer import Mailer
 from payment_list_item import PaymentListItem
-
-from loguru import logger
 
 
 class Handler(ABC):
@@ -55,10 +54,10 @@ class FileDownloadHandler(AbstractHandler):
         if context is not None:
             try:
                 context.file_object = context.dropbox_client.retrieve_file(context.excel_file_path)
-                logger.info(f"File {context.excel_file_path} downloaded")
+                logger.info(f"File {context.excel_file_name} downloaded")
                 return super().handle(context)
-            except Exception as e:
-                # TODO: narrow excepion
+            except Exception:
+                # TODO: narrow exception
                 logger.exception("Problem with download")
                 sys.exit(1)
 
@@ -74,7 +73,7 @@ class FileProcessHandler(AbstractHandler):
             for name, mk in context.payment_book.monitored_sheets.items():
                 logger.info(f'{name} - {mk}')
             context.payment_book.load_and_process(context.file_object)
-            logger.info(f"File {context.excel_file_path} processed succesfully")
+            logger.info(f"File {context.excel_file_name} processed successfully")
             return super().handle(context)
         else:
             logger.error("Context not initialized")
@@ -109,13 +108,18 @@ class NotifyOngoingHandler(AbstractHandler):
 class EkartotekaHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Ekartoteka")
-        ekart = Ekartoteka(context.ekartoteka_creditentials, context.payment_book)
+        ekart = Ekartoteka(context.ekartoteka_credentials)
         ekart.login()
-        apartment_fee, delta = ekart.update_payment_book(context.ekartoteka_sheet[0], context.ekartoteka_sheet[1])
-        ekart_str = f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł'
+        apartment_fee, delta, paid = ekart.get_payment_status()
+        context.payment_book.update_current_payment(
+            sheet_name=context.ekartoteka_sheet[0],
+            category_name=context.ekartoteka_sheet[1],
+            amount=apartment_fee,
+            paid=paid)
+        ekart_str = f'Apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
         logger.info(ekart_str)
         if not context.silent and delta != 0:
-            context.pushover.notify(f'Mieszkanie: {apartment_fee:.2f} zł, pozostało do zapłaty {delta:.2f} zł')
+            context.pushover.notify(ekart_str)
         return super().handle(context)
 
     def __str__(self):
@@ -124,9 +128,9 @@ class EkartotekaHandler(AbstractHandler):
 
 class SaveFileLocallyHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Savig file locally")
-        context.payment_book.save_to_file(filename="Oplaty.xlsm")
-        logger.info("file: Oplaty.xlsm saved")
+        logger.info("Saving file locally")
+        context.payment_book.save_to_file(filename=context.excel_file_name)
+        logger.info(f"File: {context.excel_file_name} saved")
         return super().handle(context)
 
     def __str__(self):
@@ -134,7 +138,7 @@ class SaveFileLocallyHandler(AbstractHandler):
 
 
 class MailingHandler(AbstractHandler):
-    rundry: bool = False
+    run_dry: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
 
@@ -143,7 +147,7 @@ class MailingHandler(AbstractHandler):
         logger.info("Rendering message")
         payload = mailer.render()
         logger.info("Rendering completed")
-        if not self.rundry:
+        if not self.run_dry:
             logger.info(f"There are {len(context.recipients)} mail(s) to send")
             for recipient in context.recipients:
                 mailer.send(recipient, payload)
@@ -160,9 +164,9 @@ class MailingHandler(AbstractHandler):
 
 class FileCommitHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Commiting file")
-        context.dropbox_client.commit_file("Oplaty.xlsm", context.excel_file_path)
-        logger.info("file: Oplaty.xlsm commited")
+        logger.info("Committing file")
+        context.dropbox_client.commit_file(context.excel_file_name, context.excel_file_path)
+        logger.info(f"file: {context.excel_file_name} committed")
         return super().handle(context)
 
     def __str__(self):
