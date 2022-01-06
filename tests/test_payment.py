@@ -22,3 +22,23 @@ class TestPayment:
         pmt.paid = False
         pmt.due_date += timedelta(days=3)
         assert not pmt.payable_within_2days
+
+    def test_overdue(self):
+        date_in_past = datetime.now() - timedelta(days=2)
+        date_in_future = datetime.now() + timedelta(days=2)
+
+        payment: Payment = Payment(paid=False, due_date=date_in_past, amount=10.0)
+        assert payment.overdue
+
+        payment.paid = True
+        assert not payment.overdue
+
+        payment.paid = False
+        payment.due_date = date_in_future
+        assert not payment.overdue
+
+    def test_days_left(self):
+        assert True
+        # date_in_past = datetime.now() + timedelta(days=2)
+        # payment: Payment = Payment(paid=False, due_date=date_in_past, amount=10.0)
+        # assert payment.b_days_left() == 2

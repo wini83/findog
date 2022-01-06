@@ -1,41 +1,61 @@
-import config
-from dropbox_client import DropboxClient
-from ekartoteka import Ekartoteka
-from payment_book import PaymentBook
-from pushover import Pushover
+import click
+
+from context import HandlerContext
+from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
+    FileDownloadHandler, FileProcessHandler, FileCommitHandler
+from loguru import logger
+
+from os import chdir, path
+
+chdir(path.dirname(path.abspath(__file__)))
+
+logger.add("findog.log", rotation="1 week")
 
 
-def download_file():
-    downloaded_bytes = dbx.retrieve_file(config.excel_file_path)
-    payment_book: PaymentBook = PaymentBook(config.monitored_sheets)
-    payment_book.load_from_file(downloaded_bytes)
-    print("-----------------------------------------")
+@click.command()
+@click.option("--silent", is_flag=True, help="Run without notifications", default=False)
+@click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
+@click.option("--nocommit", is_flag=True, help="Run without commiting file to dropbox", default=False)
+@click.option("--mailrundry", is_flag=True, help="Run without sending mail", default=False)
+def main(silent, noekart, nocommit, mailrundry):
+    """
+A simple program to keep your payments in check
+    """
+    click.echo(click.style('Findog - simple program to keep your payments in check',
+                           fg='black',
+                           bold=True,
+                           bg="yellow",
+                           blink=True))
+    click.echo(f'{"=" * 60}')
+    logger.info("Findog - simple program to keep your payments in check")
+    ctx = HandlerContext(silent=silent)
+    fd = FileDownloadHandler()
+    fp = FileProcessHandler()
+    no = NotifyOngoingHandler()
+    ek = EkartotekaHandler()
+    sv = SaveFileLocallyHandler()
+    ma = MailingHandler()
+    ma.rundry = mailrundry
+    fc = FileCommitHandler()
 
-    for name, mk in config.monitored_sheets.items():
-        print(f'{name} - {mk}')
+    handler = fd.set_next(fp)
 
-    print("-----------------------------------------")
-    return payment_book
+    if not silent:
+        handler = handler.set_next(no)
 
+    if not noekart:
+        handler = handler.set_next(ek)
 
-def notify(payment_book: PaymentBook):
-    for payment_sheet in payment_book.sheets:
-        cats = payment_sheet.categories
-        for category in cats:
-            print(f"{payment_sheet.name}:{category} - {(category.payments[0])}")
-            if category.payments[0].payable_within_2days:
-                pu.notify(f"{category} - {(category.payments[0])}")
+    handler = handler.set_next(sv)
+
+    if not silent:
+        handler = handler.set_next(ma)
+
+    if not nocommit:
+        handler = handler.set_next(fc)
+
+    fd.handle(ctx)
 
 
 if __name__ == '__main__':
-    pu = Pushover(config.pushover_apikey, config.pushover_user)
-    dbx = DropboxClient(config.api_key)
-    wpk = download_file()
-    notify(wpk)
-    getter = Ekartoteka(config.ekartoteka)
-    getter.initialize()
-    apartment_fee = getter.get_curret_fees_sum()
-    print(apartment_fee)
-    pu.notify(f'Mieszkanie: {apartment_fee:.2f}zł')
-    wpk.update_current_payment_amount(config.ekartoteka_sheet[0], config.ekartoteka_sheet[1], apartment_fee)
-    wpk.save_to_file(filename="Oplaty.xlsm")
+    main()

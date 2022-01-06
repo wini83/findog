@@ -1,14 +1,18 @@
 import http.client
-import string
 import urllib
 
+from Client import Client
 
-class Pushover:
-    def __init__(self, apikey: string, user: string):
+
+class Pushover(Client):
+    def __init__(self, apikey: str, user: str):
         self.apikey = apikey
         self.user = user
 
-    def notify(self, message: string):
+    def login(self):
+        pass
+
+    def notify(self, message: str):
         conn = http.client.HTTPSConnection("api.pushover.net:443")
         conn.request("POST", "/1/messages.json",
                      urllib.parse.urlencode({

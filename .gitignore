@@ -215,6 +215,8 @@ fabric.properties
 
 Oplaty.xlsm
 Oplaty.xlsx
+play.xlsx
+output_mail.html
 
 config.py
 

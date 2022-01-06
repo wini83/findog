@@ -1,50 +1,88 @@
 import string
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
-from typing import List
+from typing import Dict, List
 
 from openpyxl import Workbook
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Color
+from openpyxl.cell import Cell
 
+from payment_list_item import PaymentListItem
 from payment_sheet import PaymentSheet
 
 
+def sort_payment_list_by_date(item_list: List[PaymentListItem]) -> List[PaymentListItem]:
+    return sorted(item_list, key=lambda x: x.payment.due_date, reverse=False)
+
+
+def make_json_payments(item_list: List[PaymentListItem]):
+    result = []
+    for item3 in item_list:
+        result.append(item3.to_dict())
+    return result
+
+
 class PaymentBook:
-    _payment_sheets: List[PaymentSheet] = None
+    _payment_sheets: Dict[str, PaymentSheet] = None
     _workbook: Workbook = None
     _monitored_sheets = None
 
     def __init__(self, monitored_sheets):
-        self._payment_sheets = []
+        self._payment_sheets = {}
         self._monitored_sheets = monitored_sheets
 
-    def load_from_file(self, file: bytes):
+    def load_and_process(self, file: bytes):
         self._workbook = load_workbook(filename=BytesIO(file), keep_vba=True)
         for sheet_name, monit_cats in self.monitored_sheets.items():
             if self._workbook.__contains__(sheet_name):
                 payment_sheet = PaymentSheet(self._workbook[sheet_name], sheet_name, monit_cats)
-                payment_sheet.populate_categories()
-                self._payment_sheets.append(payment_sheet)
+                current_row = payment_sheet.get_active_row
+                if current_row > 1:
+                    payment_sheet.populate_categories(current_row)
+                    payment_sheet.populate_next_month(current_row)
+                self._payment_sheets[sheet_name] = payment_sheet
 
     def save_to_file(self, filename):
         self._workbook.save(filename=filename)
 
-    def update_current_payment_amount(self, sheet_name: string, category_name: string, amount: float):
-        for sheet in self._payment_sheets:
-            if sheet.name == sheet_name:
-                for cat in sheet.categories:
-                    if cat.name == category_name:
-                        for pmt in cat.payments:
-                            if pmt.due_date.year == date.today().year and pmt.due_date.month == date.today().month:
-                                pmt.amount = amount
-                                cell_local = f'{cat.column}{pmt.excel_row}'
-                                sheet.sheet[cell_local] = amount
-                                # sheet.sheet[cell_local].fill = PatternFill(bgColor=Color(indexed=5),
-                                # fill_type="solid")
-                                break
-                        break
-                break
+    def update_current_payment(self, sheet_name: string, category_name: string,
+                               amount: float = None,
+                               paid: bool = None,
+                               due_date: datetime = None):
+        # TODO: refactor
+        sheet: PaymentSheet = self._payment_sheets[sheet_name]
+        if sheet.name == sheet_name:
+            cat = sheet.categories[category_name]
+            # TODO:Secure
+            if cat.name == category_name:
+                now = datetime.now()
+                pmt = cat.payments[f'{now.year}-{now.month}']
+                # TODO:Secure
+                if pmt.due_date.year == date.today().year and pmt.due_date.month == date.today().month:
+                    cell_amount: Cell = sheet.sheet[f'{cat.column}{pmt.excel_row}']
+                    cell_paid: Cell = sheet.sheet.cell(row=cell_amount.row, column=cell_amount.column + 1)
+                    cell_due_date: Cell = sheet.sheet.cell(row=cell_amount.row,
+                                                           column=cell_amount.column + 2)
+                    if amount is not None:
+                        pmt.amount = amount
+                        cell_amount.value = amount
+                    if paid is not None:
+                        pmt.paid = paid
+                        cell_paid.value = int(paid)
+                    if due_date is not None:
+                        pmt.due_date = due_date
+                        cell_due_date.value = due_date
+                        sheet.format_payment(cell_amount.column, pmt)
+
+    @property
+    def payment_list(self) -> List[PaymentListItem]:
+        result: List[PaymentListItem] = []
+        for sheet in self._payment_sheets.values():
+            for category in sheet.categories.values():
+                for payment in category.payments.values():
+                    new_item: PaymentListItem = PaymentListItem(payment, category, sheet)
+                    result.append(new_item)
+        return result
 
     @property
     def sheets(self):

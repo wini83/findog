@@ -1,4 +1,7 @@
 dropbox
-
 openpyxl
-PyJWT
+click
+colorama
+jinja2
+loguru
+numpy
