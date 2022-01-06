@@ -17,8 +17,8 @@ logger.add("findog.log", rotation="1 week")
 @click.option("--noekart", is_flag=True, help="Run without Ekartoteka", default=False)
 @click.option("--nocommit", is_flag=True, help="Run without committing file to dropbox", default=False)
 @click.option("--mailrundry", is_flag=True, help="Run without sending mail", default=False)
-@click.option("--experimental", is_flag=True, help="in experimental mode", default=False)
-def main(silent, noekart, nocommit, mailrundry,experimental):
+@click.option("--noexcel", is_flag=True, help="in experimental mode", default=False)
+def main(silent, noekart, nocommit, mailrundry, noexcel):
     """
 A simple program to keep your payments in check
     """
@@ -38,24 +38,22 @@ A simple program to keep your payments in check
     ma = MailingHandler()
     ma.run_dry = mailrundry
     fc = FileCommitHandler()
-
-    handler = fd.set_next(fp)
-
-    if not silent:
-        handler = handler.set_next(no)
-
-    if not noekart:
-        handler = handler.set_next(ek)
-
-    handler = handler.set_next(sv)
-
-    if not silent:
-        handler = handler.set_next(ma)
-
-    if not nocommit:
-        handler = handler.set_next(fc)
-
-    fd.handle(ctx)
+    if not noexcel:
+        handler = fd.set_next(fp)
+        if not silent:
+            handler = handler.set_next(no)
+        if not noekart:
+            handler = handler.set_next(ek)
+        handler = handler.set_next(sv)
+        if not silent:
+            handler = handler.set_next(ma)
+        if not nocommit:
+            handler.set_next(fc)
+        fd.handle(ctx)
+    else:
+        if not noekart:
+            ek.without_update = True
+            ek.handle(ctx)
 
 
 if __name__ == '__main__':

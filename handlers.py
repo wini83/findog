@@ -106,16 +106,19 @@ class NotifyOngoingHandler(AbstractHandler):
 
 
 class EkartotekaHandler(AbstractHandler):
+    without_update: bool = False
+
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Ekartoteka")
         ekart = Ekartoteka(context.ekartoteka_credentials)
         ekart.login()
         apartment_fee, delta, paid = ekart.get_payment_status()
-        context.payment_book.update_current_payment(
-            sheet_name=context.ekartoteka_sheet[0],
-            category_name=context.ekartoteka_sheet[1],
-            amount=apartment_fee,
-            paid=paid)
+        if not self.without_update:
+            context.payment_book.update_current_payment(
+                sheet_name=context.ekartoteka_sheet[0],
+                category_name=context.ekartoteka_sheet[1],
+                amount=apartment_fee,
+                paid=paid)
         ekart_str = f'Apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
         logger.info(ekart_str)
         if not context.silent and delta != 0:
