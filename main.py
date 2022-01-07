@@ -2,7 +2,7 @@ import click
 
 from context import HandlerContext
 from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
-    FileDownloadHandler, FileProcessHandler, FileCommitHandler
+    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
 from loguru import logger
 
 from os import chdir, path
@@ -34,6 +34,7 @@ A simple program to keep your payments in check
     fp = FileProcessHandler()
     no = NotifyOngoingHandler()
     ek = EkartotekaHandler()
+    ip = IPrzedszkoleHandler()
     sv = SaveFileLocallyHandler()
     ma = MailingHandler()
     ma.run_dry = mailrundry
@@ -44,6 +45,7 @@ A simple program to keep your payments in check
             handler = handler.set_next(no)
         if not noekart:
             handler = handler.set_next(ek)
+        handler = handler.set_next(ip)
         handler = handler.set_next(sv)
         if not silent:
             handler = handler.set_next(ma)
@@ -51,9 +53,10 @@ A simple program to keep your payments in check
             handler.set_next(fc)
         fd.handle(ctx)
     else:
+        ek.without_update = True
         if not noekart:
-            ek.without_update = True
             ek.handle(ctx)
+        ip.handle(ctx)
 
 
 if __name__ == '__main__':

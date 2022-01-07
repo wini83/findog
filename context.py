@@ -26,7 +26,9 @@ class HandlerContext:
         self.payment_book = PaymentBook(config.monitored_sheets)
         self.excel_file_path = config.excel_file_path
         self.ekartoteka_credentials = config.ekartoteka
+        self.iprzedszkole_credentials = config.przedszkole
         self.ekartoteka_sheet = config.ekartoteka_sheet
+        self.iprzedszkole_sheet = config.przedszkole_sheet
         self.silent = silent
         self.recipients = config.recipients
         self.gmail_user = config.gmail_user

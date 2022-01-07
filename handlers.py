@@ -5,6 +5,7 @@ from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
+from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
 from payment_list_item import PaymentListItem
 
@@ -127,6 +128,37 @@ class EkartotekaHandler(AbstractHandler):
 
     def __str__(self):
         return "Ekartoteka"
+
+
+class IPrzedszkoleHandler(AbstractHandler):
+    without_update: bool = False
+
+    def handle(self, context: HandlerContext) -> HandlerContext:
+        logger.info("iPrzedszkole")
+        iprzedszkole = Iprzedszkole(
+            context.iprzedszkole_credentials["kindergarten"],
+            context.iprzedszkole_credentials["username"],
+            context.iprzedszkole_credentials["password"])
+        iprzedszkole.login()
+        result: Receivables = iprzedszkole.get_receivables()
+        if result.summary_overdue > 0:
+            paid = False
+        else:
+            paid = True
+        if not self.without_update:
+            context.payment_book.update_current_payment(
+                sheet_name=context.iprzedszkole_sheet[0],
+                category_name=context.iprzedszkole_sheet[1],
+                amount=result.summary_overdue,
+                paid=paid)
+        iprzedszkole_str = f'iPrzedszkole fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN , unpaid: PLN {result.summary_overdue:.2f} '
+        logger.info(iprzedszkole_str)
+        if not context.silent:
+            context.pushover.notify(iprzedszkole_str)
+        return super().handle(context)
+
+    def __str__(self):
+        return "iPrzedszkole"
 
 
 class SaveFileLocallyHandler(AbstractHandler):
