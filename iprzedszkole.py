@@ -6,6 +6,9 @@ import json
 import datetime
 from typing import NamedTuple
 
+import ssl
+import certifi
+
 from bs4 import BeautifulSoup
 
 from Client import Client
@@ -63,6 +66,7 @@ class Iprzedszkole(Client):
 
     def login(self):
         cj = CookieJar()
+        ssl._create_default_https_context = ssl._create_unverified_context
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
         request = urllib.request.Request(self.URL_BASE + self.URL_LOGIN)
         request.add_header('User-Agent', self.userAgent)
