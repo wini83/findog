@@ -5,7 +5,7 @@ import re
 import json
 import datetime
 from typing import NamedTuple
-
+from loguru import logger
 import ssl
 import certifi
 
@@ -33,10 +33,6 @@ def get_last_month_int():
 
 
 class Receivables(NamedTuple):
-    amount_to_pay: float
-    amount_paid: float
-    amount_overdue: float
-    amount_overpayment: float
     summary_to_pay: float
     summary_paid: float
     summary_overdue: float
@@ -115,31 +111,31 @@ class Iprzedszkole(Client):
     def get_receivables(self):
         if not self.logged_in:
             raise ConnectionError
-        request_payload_2 = "{idDziecko: %s, rokStart: 2021}" % self.child_master_id
+        request_payload_2 = "{idDziecko: %s, rokStart:2021, listViewName:Szczegoly}" % self.child_master_id
+
+        strings = '{"args": {"dzieckoId": 22347, "rokStart": "2021", "listViewName": "Szczegoly"}}'
+
+        appDict = {
+            'dzieckoId': self.child_master_id,
+            'rokStart': "2021",
+            'listViewName': 'Szczegoly'
+        }
+        app_json = json.dumps(appDict)
 
         request = urllib.request.Request(
             self.URL_BASE + self.URL_RECEIVABLES_ANNUAL)
-        request.data = request_payload_2.encode('utf-8')
+        request.data = strings.encode('utf-8')
         request.add_header('Content-Type', 'application/json; charset=utf-8')
         result = self.opener.open(request).read()
 
         zbigniew = json.loads(result)
-
-        kwoty = zbigniew["d"]["kwoty"]
-
-        summary = zbigniew["d"]["razem"]
-
-        amounts_current = kwoty[get_last_month_int().__str__()]
-
-        amount_to_pay = parse_amount(amounts_current["kw1"])
-        amount_paid = parse_amount(amounts_current["kw2"])
-        amount_overdue = parse_amount(amounts_current["kw3"])
-        amount_overpayment = parse_amount(amounts_current["kw4"])
-
-        summary_to_pay = parse_amount(summary["kw1"])
-        summary_paid = parse_amount(summary["kw2"])
-        summary_overdue = parse_amount(summary["kw3"])
-        summary_overpayment = parse_amount(summary["kw4"])
+        okresy = zbigniew["d"]["ListData"]
+        amounts_summary = okresy[-2]
+        print(amounts_summary)
+        summary_to_pay = amounts_summary["DoZaplaty"]
+        summary_paid = amounts_summary["Zaplacono"]
+        summary_overdue = amounts_summary["Zaleglosc"]
+        summary_overpayment = amounts_summary["Nadplata"]
 
         request = urllib.request.Request(self.URL_BASE + self.URL_RECEIVABLES)
         request.add_header('User-Agent', self.userAgent)
@@ -152,10 +148,6 @@ class Iprzedszkole(Client):
         costs_additional = _extract_amounts_main(bs, "ctl00_ContentPlaceHolder1_kwotaDodatkowe")
 
         return Receivables(
-            amount_to_pay=amount_to_pay,
-            amount_paid=amount_paid,
-            amount_overdue=amount_overdue,
-            amount_overpayment=amount_overpayment,
             summary_to_pay=summary_to_pay,
             summary_paid=summary_paid,
             summary_overdue=summary_overdue,

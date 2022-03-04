@@ -135,26 +135,29 @@ class IPrzedszkoleHandler(AbstractHandler):
 
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("iPrzedszkole")
-        iprzedszkole = Iprzedszkole(
-            context.iprzedszkole_credentials["kindergarten"],
-            context.iprzedszkole_credentials["username"],
-            context.iprzedszkole_credentials["password"])
-        iprzedszkole.login()
-        result: Receivables = iprzedszkole.get_receivables()
-        if result.summary_overdue > 0:
-            paid = False
-        else:
-            paid = True
-        if not self.without_update:
-            context.payment_book.update_current_payment(
-                sheet_name=context.iprzedszkole_sheet[0],
-                category_name=context.iprzedszkole_sheet[1],
-                amount=result.summary_overdue,
-                paid=paid)
-        iprzedszkole_str = f'iPrzedszkole fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN , unpaid: PLN {result.summary_overdue:.2f} '
-        logger.info(iprzedszkole_str)
-        if not context.silent:
-            context.pushover.notify(iprzedszkole_str)
+        try:
+            iprzedszkole = Iprzedszkole(
+                context.iprzedszkole_credentials["kindergarten"],
+                context.iprzedszkole_credentials["username"],
+                context.iprzedszkole_credentials["password"])
+            iprzedszkole.login()
+            result: Receivables = iprzedszkole.get_receivables()
+            if result.summary_overdue > 0:
+                paid = False
+            else:
+                paid = True
+            if not self.without_update:
+                context.payment_book.update_current_payment(
+                    sheet_name=context.iprzedszkole_sheet[0],
+                    category_name=context.iprzedszkole_sheet[1],
+                    amount=result.summary_to_pay,
+                    paid=paid)
+            iprzedszkole_str = f'iPrzedszkole fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN , unpaid: PLN {result.summary_overdue:.2f} '
+            logger.info(iprzedszkole_str)
+            if not context.silent:
+                context.pushover.notify(iprzedszkole_str)
+        except:
+            logger.exception("Problem with iprzedszkole")
         return super().handle(context)
 
     def __str__(self):
