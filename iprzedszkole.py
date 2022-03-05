@@ -46,7 +46,7 @@ class Iprzedszkole(Client):
     URL_BASE = 'https://iprzedszkole.progman.pl'
     USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 ' \
                  'Safari/537.36 '
-    URL_LOGIN = "/iprzedszkole/Authentication/Login.aspx"
+    URL_LOGIN = "/iprzedszkole/Authentication/login.aspx"
     URL_MEAL_PLAN = '/iprzedszkole/Pages/PanelRodzica/Jadlospis/Jadlospis.aspx'
     URL_RECEIVABLES_ANNUAL = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneRaportRoczny'
     URL_RECEIVABLES = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/Naleznosci.aspx'
@@ -131,7 +131,6 @@ class Iprzedszkole(Client):
         zbigniew = json.loads(result)
         okresy = zbigniew["d"]["ListData"]
         amounts_summary = okresy[-2]
-        print(amounts_summary)
         summary_to_pay = amounts_summary["DoZaplaty"]
         summary_paid = amounts_summary["Zaplacono"]
         summary_overdue = amounts_summary["Zaleglosc"]

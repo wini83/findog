@@ -15,6 +15,7 @@ class HandlerContext:
     excel_file_path: str
     ekartoteka_credentials: Any
     ekartoteka_sheet: Any
+    enea_credentials:Any
     silent: bool
     recipients: List[str]
     gmail_user: str
@@ -28,6 +29,7 @@ class HandlerContext:
         self.ekartoteka_credentials = config.ekartoteka
         self.iprzedszkole_credentials = config.przedszkole
         self.ekartoteka_sheet = config.ekartoteka_sheet
+        self.enea_credentials = config.enea
         self.iprzedszkole_sheet = config.przedszkole_sheet
         self.silent = silent
         self.recipients = config.recipients

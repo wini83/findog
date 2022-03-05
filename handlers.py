@@ -5,6 +5,7 @@ from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
+from enea import Enea
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
 from payment_list_item import PaymentListItem
@@ -162,6 +163,27 @@ class IPrzedszkoleHandler(AbstractHandler):
 
     def __str__(self):
         return "iPrzedszkole"
+
+class EneaHandler(AbstractHandler):
+    without_update: bool = False
+
+    def handle(self, context: HandlerContext) -> HandlerContext:
+        logger.info("Enea")
+        try:
+            enea = Enea(
+                context.enea_credentials["username"],
+                context.enea_credentials["password"])
+            amount, staus =  enea.login()
+            enea_str = f'Enea energy costs: PLN {amount:.2f}; Status text: {staus} '
+            logger.info(enea_str)
+            if not context.silent:
+                context.pushover.notify(enea_str)
+        except:
+            logger.exception("Problem with Enea")
+        return super().handle(context)
+
+    def __str__(self):
+        return "Enea"
 
 
 class SaveFileLocallyHandler(AbstractHandler):
