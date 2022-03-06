@@ -60,7 +60,8 @@ class FileDownloadHandler(AbstractHandler):
                 return super().handle(context)
             except Exception:
                 # TODO: narrow exception
-                logger.exception("Problem with download")
+                logger.exception("Problem with download excel file")
+                context.pushover.error("Problem with download excel file")
                 sys.exit(1)
 
     def __str__(self):
@@ -157,10 +158,12 @@ class IPrzedszkoleHandler(AbstractHandler):
             context.statuses.append(iprzedszkole_str)
         except:
             logger.exception("Problem with iprzedszkole")
+            context.pushover.error("Problem with iprzedszkole")
         return super().handle(context)
 
     def __str__(self):
         return "iPrzedszkole"
+
 
 class EneaHandler(AbstractHandler):
     without_update: bool = False
@@ -171,12 +174,13 @@ class EneaHandler(AbstractHandler):
             enea = Enea(
                 context.enea_credentials["username"],
                 context.enea_credentials["password"])
-            amount, staus =  enea.login()
+            amount, staus = enea.login()
             enea_str = f'Enea energy costs: PLN {amount:.2f}; Status text: {staus} '
             logger.info(enea_str)
             context.statuses.append(enea_str)
         except:
             logger.exception("Problem with Enea")
+            context.pushover.error("Problem with Enea")
         return super().handle(context)
 
     def __str__(self):
