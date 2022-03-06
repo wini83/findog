@@ -15,11 +15,12 @@ class HandlerContext:
     excel_file_path: str
     ekartoteka_credentials: Any
     ekartoteka_sheet: Any
-    enea_credentials:Any
+    enea_credentials: Any
     silent: bool
     recipients: List[str]
     gmail_user: str
     gmail_pass: str
+    statuses: List[str]
 
     def __init__(self, silent: bool = False):
         self.dropbox_client = DropboxClient(config.api_key)
@@ -35,6 +36,7 @@ class HandlerContext:
         self.recipients = config.recipients
         self.gmail_user = config.gmail_user
         self.gmail_pass = config.gmail_pass
+        self.statuses = []
 
     @property
     def excel_file_name(self):

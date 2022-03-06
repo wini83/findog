@@ -121,10 +121,9 @@ class EkartotekaHandler(AbstractHandler):
                 category_name=context.ekartoteka_sheet[1],
                 amount=apartment_fee,
                 paid=paid)
-        ekart_str = f'Apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
+        ekart_str = f'EKARTOTEKA: apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
         logger.info(ekart_str)
-        if not context.silent and delta != 0:
-            context.pushover.notify(ekart_str)
+        context.statuses.append(ekart_str)
         return super().handle(context)
 
     def __str__(self):
@@ -153,10 +152,9 @@ class IPrzedszkoleHandler(AbstractHandler):
                     category_name=context.iprzedszkole_sheet[1],
                     amount=result.summary_to_pay,
                     paid=paid)
-            iprzedszkole_str = f'iPrzedszkole fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN , unpaid: PLN {result.summary_overdue:.2f} '
+            iprzedszkole_str = f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN , unpaid: PLN {result.summary_overdue:.2f} '
             logger.info(iprzedszkole_str)
-            if not context.silent:
-                context.pushover.notify(iprzedszkole_str)
+            context.statuses.append(iprzedszkole_str)
         except:
             logger.exception("Problem with iprzedszkole")
         return super().handle(context)
@@ -176,8 +174,7 @@ class EneaHandler(AbstractHandler):
             amount, staus =  enea.login()
             enea_str = f'Enea energy costs: PLN {amount:.2f}; Status text: {staus} '
             logger.info(enea_str)
-            if not context.silent:
-                context.pushover.notify(enea_str)
+            context.statuses.append(enea_str)
         except:
             logger.exception("Problem with Enea")
         return super().handle(context)
@@ -198,11 +195,12 @@ class SaveFileLocallyHandler(AbstractHandler):
 
 
 class MailingHandler(AbstractHandler):
-    run_dry: bool = False
+    run_dry: bool = True
 
     def handle(self, context: HandlerContext) -> HandlerContext:
 
         mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
+        mailer.statuses = context.statuses
         mailer.login()
         logger.info("Rendering message")
         payload = mailer.render()
@@ -219,7 +217,7 @@ class MailingHandler(AbstractHandler):
         return super().handle(context)
 
     def __str__(self):
-        return "Send Mails"
+        return "Mailer"
 
 
 class FileCommitHandler(AbstractHandler):

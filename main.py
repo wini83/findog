@@ -52,8 +52,8 @@ A simple program to keep your payments in check
             handler = handler.set_next(ip)
         if not noenea:
             handler = handler.set_next(en)
-        if not silent:
-            handler = handler.set_next(ma)
+        #if not silent: TODO: better logic silent
+        handler = handler.set_next(ma)
         handler = handler.set_next(sv)
         if not nocommit:
             handler.set_next(fc)
