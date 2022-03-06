@@ -195,7 +195,7 @@ class SaveFileLocallyHandler(AbstractHandler):
 
 
 class MailingHandler(AbstractHandler):
-    run_dry: bool = True
+    run_dry: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
 
