@@ -12,7 +12,7 @@ from Client import Client
 
 def _extract_amounts_main(bs):
     span = bs.find('span', {'class': 'h1 value-to-pay'})
-    amount_str = span.get_text().strip().rstrip("zł").strip().replace(",",".")
+    amount_str = span.get_text().strip().rstrip("zł").strip().replace(",", ".")
     return float(amount_str)
 
 
@@ -85,6 +85,6 @@ class Enea(Client):
         result = result.decode('utf-8')
         soup = BeautifulSoup(result, 'html.parser')
         amount = _extract_amounts_main(soup)
-        status = soup.find('span', {'class': 'text-info-box'}).get_text().strip()
+        status = "N/A"  # soup.find('span', {'class': 'text-info-box'}).get_text().strip()
         self.logged_in = True
         return amount, status
