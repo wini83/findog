@@ -205,19 +205,24 @@ class MailingHandler(AbstractHandler):
 
         mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
         mailer.statuses = context.statuses
-        mailer.login()
-        logger.info("Rendering message")
-        payload = mailer.render()
-        logger.info("Rendering completed")
-        if not self.run_dry:
-            logger.info(f"There are {len(context.recipients)} mail(s) to send")
-            for recipient in context.recipients:
-                mailer.send(recipient, payload)
-                logger.info(f"mail to {recipient} send")
-            logger.info("sending mail completed")
-        else:
-            with open("output_mail.html", "wb") as html_file:
-                html_file.write(payload.encode('utf-8'))
+        try:
+            mailer.login()
+            logger.info("Rendering message")
+            payload = mailer.render()
+            logger.info("Rendering completed")
+            if not self.run_dry:
+                logger.info(f"There are {len(context.recipients)} mail(s) to send")
+                for recipient in context.recipients:
+                    mailer.send(recipient, payload)
+                    logger.info(f"mail to {recipient} send")
+                logger.info("sending mail completed")
+            else:
+                with open("output_mail.html", "wb") as html_file:
+                    html_file.write(payload.encode('utf-8'))
+        except:
+            # TODO: narrow exception
+            logger.exception("Problem with Mailer")
+            context.pushover.error("Problem with mailer")
         return super().handle(context)
 
     def __str__(self):
