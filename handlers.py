@@ -1,5 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from loguru import logger
 
@@ -116,12 +117,17 @@ class EkartotekaHandler(AbstractHandler):
         ekart = Ekartoteka(context.ekartoteka_credentials)
         ekart.login()
         apartment_fee, delta, paid = ekart.get_payment_status()
+        day = datetime.today().day
+        force_update = True
+        if day < 25:
+            force_update = False
         if not self.without_update:
             context.payment_book.update_current_payment(
                 sheet_name=context.ekartoteka_sheet[0],
                 category_name=context.ekartoteka_sheet[1],
                 amount=apartment_fee,
-                paid=paid)
+                paid=paid,
+                force_unpaid=force_update)
         ekart_str = f'EKARTOTEKA: apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
         logger.info(ekart_str)
         context.statuses.append(ekart_str)

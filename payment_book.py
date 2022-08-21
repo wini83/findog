@@ -48,7 +48,8 @@ class PaymentBook:
     def update_current_payment(self, sheet_name: string, category_name: string,
                                amount: float = None,
                                paid: bool = None,
-                               due_date: datetime = None):
+                               due_date: datetime = None,
+                               force_unpaid:bool = None):
         # TODO: refactor
         sheet: PaymentSheet = self._payment_sheets[sheet_name]
         if sheet.name == sheet_name:
@@ -63,12 +64,18 @@ class PaymentBook:
                     cell_paid: Cell = sheet.sheet.cell(row=cell_amount.row, column=cell_amount.column + 1)
                     cell_due_date: Cell = sheet.sheet.cell(row=cell_amount.row,
                                                            column=cell_amount.column + 2)
+                    if force_unpaid is None:
+                        force_unpaid = True
                     if amount is not None:
                         pmt.amount = amount
                         cell_amount.value = amount
                     if paid is not None:
                         pmt.paid = paid
-                        cell_paid.value = int(paid)
+                        if not paid:
+                            if force_unpaid:
+                                cell_paid.value = int(paid)
+                        else:
+                            cell_paid.value = int(paid)
                     if due_date is not None:
                         pmt.due_date = due_date
                         cell_due_date.value = due_date
