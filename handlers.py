@@ -117,6 +117,8 @@ class EkartotekaHandler(AbstractHandler):
         ekart = Ekartoteka(context.ekartoteka_credentials)
         ekart.login()
         apartment_fee, delta, paid = ekart.get_payment_status()
+        dates = ekart.get_update_stamp()
+
         day = datetime.today().day
         force_update = True
         if day < 25:
@@ -128,7 +130,9 @@ class EkartotekaHandler(AbstractHandler):
                 amount=apartment_fee,
                 paid=paid,
                 force_unpaid=force_update)
-        ekart_str = f'EKARTOTEKA: apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} '
+        ekart_str = f'EKARTOTEKA: apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} Updates:'
+        for key, value in dates.items():
+            ekart_str = ekart_str + f' {key}-{value:%Y-%m-%d};'
         logger.info(ekart_str)
         context.statuses.append(ekart_str)
         return super().handle(context)

@@ -16,6 +16,13 @@ def seconds_from_epoch() -> int:
     return int(from_epoch)
 
 
+def parse_date(string_input):
+    shorted = string_input[0:10]
+    formt = "%Y-%m-%d"
+    result = datetime.strptime(shorted, formt)
+    return result
+
+
 class Ekartoteka(Client):
     URL_SETTLEMENTS = "https://e-kartoteka.pl/api/rozrachunki/konta/?id_a_do={}&id_kli={}&rok={}"
     URL_TOKEN = "https://e-kartoteka.pl/api/api-token-auth/"
@@ -23,6 +30,7 @@ class Ekartoteka(Client):
     URL_PREMISES = "https://e-kartoteka.pl/api/oplatymiesieczne/lokale/?id_a_do={}&id_kli={}"
     URL_MOTHLY_FEES_SUM = "https://e-kartoteka.pl/api/oplatymiesieczne/oplatymiesiecznenalokale/suma/?id_a_do={" \
                           "}&id_kli={} "
+    URL_UPDATE_DATES = "https://e-kartoteka.pl/api/uzytkownicy/datyaktualizacji/?id_a_do={}&id_kli={}&pageSize=50"
     token: str
     _creditentials = None
     user_full_name: str = None
@@ -163,11 +171,38 @@ class Ekartoteka(Client):
         except ValueError:
             return False, "Wrong response structure"
 
+    def get_update_stamp(self):
+        if self.token is None:
+            return False, "Not initialized"
+        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        url = self.URL_UPDATE_DATES.format(self.user_id, self.client_id)
+        req = request.Request(url, headers=headers)
+        try:
+            response = request.urlopen(req)
+            reader = codecs.getreader("utf-8")
+            # Parse Json
+            data = json.load(reader(response))
+            table = data["results"]
+            updates = {}
+            for item in table:
+                if item['typ'] == "DK":
+                    updates['DK'] = parse_date(item['data'])
+                if item['typ'] == "DKL":
+                    updates['DKL'] = parse_date(item['data'])
+                if item['typ'] == "SRC":
+                    updates['SRC'] = parse_date(item['data'])
+            return updates
+        except URLError:
+            return False, "Network Problem"
+        except JSONDecodeError:
+            return False, "Response is not Json;"
+        except ValueError:
+            return False, "Wrong response structure"
+
     def get_payment_status(self):
         # TODO: not initialized
         apartment_fee = self.get_curret_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
-
         if res_setl and delta is not None:
             if delta > 0:
                 paid = False
