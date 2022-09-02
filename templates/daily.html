@@ -93,7 +93,9 @@ img{-ms-interpolation-mode: bicubic;}
 
                         <p class="fallback"
                            style="font:14px/21px 'Open Sans', sans-serif;color:#222222;margin:0 0 16px;">Progress:
-                            <strong> {{ '{0:0.1f}'.format(progress) }}% </strong></p>
+                            <strong> {{ '{0:0.1f}'.format(progress) }}% </strong>
+                            <progress id="file" value="{progress}" max="100"> {progress}% </progress>
+                        </p>
 
                         <hr style="display:block;width:100%;height:1px;margin:15px 0 16px;border:0;background:#dddddd;box-sizing:border-box;"/>
                         <h2 class="fallback"
