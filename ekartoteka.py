@@ -4,11 +4,11 @@ from base64 import b64decode
 from datetime import datetime
 
 from json import JSONDecodeError
+from typing import NamedTuple
 from urllib import request
 from urllib.error import URLError
 
 from Client import Client
-from payment_book import PaymentBook
 
 
 def seconds_from_epoch() -> int:
@@ -21,6 +21,14 @@ def parse_date(string_input):
     formt = "%Y-%m-%d"
     result = datetime.strptime(shorted, formt)
     return result
+
+
+class EkartotekaResult(NamedTuple):
+    apartment_fee: float
+    delta: float
+    paid: bool
+    force_unpaid: bool
+    update_dates: dict
 
 
 class Ekartoteka(Client):
@@ -184,13 +192,11 @@ class Ekartoteka(Client):
             data = json.load(reader(response))
             table = data["results"]
             updates = {}
+            monitored_cats = ["DK", "DKL", "SRC", "LI", "NL", "NRB", "STL"]
             for item in table:
-                if item['typ'] == "DK":
-                    updates['DK'] = parse_date(item['data'])
-                if item['typ'] == "DKL":
-                    updates['DKL'] = parse_date(item['data'])
-                if item['typ'] == "SRC":
-                    updates['SRC'] = parse_date(item['data'])
+                for category in monitored_cats:
+                    if item['typ'] == category:
+                        updates[category] = parse_date(item['data'])
             return updates
         except URLError:
             return False, "Network Problem"
@@ -203,6 +209,7 @@ class Ekartoteka(Client):
         # TODO: not initialized
         apartment_fee = self.get_curret_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
+        dates = self.get_update_stamp()
         if res_setl and delta is not None:
             if delta > 0:
                 paid = False
@@ -211,7 +218,18 @@ class Ekartoteka(Client):
         else:
             paid = None
         now = datetime.now()
-        # TODO: recognition of Ekartoteka update
-        if now.day < 8:
-            paid = None
-        return apartment_fee, delta, paid
+        li = dates["LI"]
+        if now.month != li.month:
+            apartment_fee = 666.66
+            paid = False
+            force_unpaid = True
+        else:
+            if now.day < 25:
+                force_unpaid = False
+            else:
+                force_unpaid = True
+        return EkartotekaResult(apartment_fee=apartment_fee,
+                                delta=delta,
+                                paid=paid,
+                                force_unpaid=force_unpaid,
+                                update_dates=dates)

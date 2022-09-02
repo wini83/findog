@@ -1,6 +1,5 @@
 import sys
 from abc import ABC, abstractmethod
-from datetime import datetime
 
 from loguru import logger
 
@@ -116,22 +115,18 @@ class EkartotekaHandler(AbstractHandler):
         logger.info("Ekartoteka")
         ekart = Ekartoteka(context.ekartoteka_credentials)
         ekart.login()
-        apartment_fee, delta, paid = ekart.get_payment_status()
-        dates = ekart.get_update_stamp()
+        result = ekart.get_payment_status()
 
-        day = datetime.today().day
-        force_update = True
-        if day < 25:
-            force_update = False
         if not self.without_update:
             context.payment_book.update_current_payment(
                 sheet_name=context.ekartoteka_sheet[0],
                 category_name=context.ekartoteka_sheet[1],
-                amount=apartment_fee,
-                paid=paid,
-                force_unpaid=force_update)
-        ekart_str = f'EKARTOTEKA: apartment fee: PLN {apartment_fee:.2f} , unpaid: PLN {delta:.2f} Updates:'
-        for key, value in dates.items():
+                amount=result.apartment_fee,
+                paid=result.paid,
+                force_unpaid=result.force_update)
+        ekart_str = \
+            f'EKARTOTEKA: apartment fee: PLN {result.apartment_fee:.2f} , unpaid: PLN {result.delta:.2f} Updates: '
+        for key, value in result.update_dates.items():
             ekart_str = ekart_str + f' {key}-{value:%Y-%m-%d};'
         logger.info(ekart_str)
         context.statuses.append(ekart_str)
@@ -164,7 +159,9 @@ class IPrzedszkoleHandler(AbstractHandler):
                     category_name=context.iprzedszkole_sheet[1],
                     amount=total_cost,
                     paid=paid)
-            iprzedszkole_str = f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, Total cost: {total_cost:.2f} PLN, unpaid: PLN {result.summary_overdue:.2f} '
+            iprzedszkole_str = \
+                f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
+                f'Total cost: {total_cost:.2f} PLN, unpaid: PLN {result.summary_overdue:.2f} '
             logger.info(iprzedszkole_str)
             context.statuses.append(iprzedszkole_str)
         except:
