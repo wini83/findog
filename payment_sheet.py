@@ -80,6 +80,11 @@ class PaymentSheet:
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
             item: PaymentCategory = PaymentCategory(name=name, column=column)
+            comment = self._sheet[f"{column}1"].comment
+            if comment is None:
+                item.icon = "fa-camera"
+            else:
+                item.icon = comment.text.strip()
             amount = float(self._sheet[f"{column}{active_row}"].value)
             column_int = self._sheet[f"{column}{active_row}"].col_idx
             try:

@@ -123,7 +123,7 @@ class EkartotekaHandler(AbstractHandler):
                 category_name=context.ekartoteka_sheet[1],
                 amount=result.apartment_fee,
                 paid=result.paid,
-                force_unpaid=result.force_update)
+                force_unpaid=result.force_unpaid)
         ekart_str = \
             f'EKARTOTEKA: apartment fee: PLN {result.apartment_fee:.2f} , unpaid: PLN {result.delta:.2f} Updates: '
         for key, value in result.update_dates.items():
