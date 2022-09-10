@@ -189,7 +189,7 @@ class PaymentSheet:
         cell_this_month_sum: Cell = self.sheet.cell(column=2, row=current_row)
         cell_next_month_sum: Cell = self.sheet.cell(column=2, row=current_row + 1)
         if cell_next_month_sum.value is None:
-            cell_next_month_sum.value = self._generate_sum_string(current_row)
+            cell_next_month_sum.value = self._generate_sum_string(current_row+1)
             cell_next_month_sum.number_format = cell_this_month_sum.number_format
             cell_next_month_sum.font = copy(cell_this_month_sum.font)
             cell_next_month_sum.border = copy(cell_this_month_sum.border)
