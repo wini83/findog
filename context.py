@@ -32,6 +32,7 @@ class HandlerContext:
         self.ekartoteka_sheet = config.ekartoteka_sheet
         self.enea_credentials = config.enea
         self.iprzedszkole_sheet = config.przedszkole_sheet
+        self.enea_sheet = config.enea_sheet
         self.silent = silent
         self.recipients = config.recipients
         self.gmail_user = config.gmail_user
