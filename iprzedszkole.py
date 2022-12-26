@@ -1,13 +1,10 @@
-from http.cookiejar import CookieJar
-
-import urllib.request
-import re
-import json
 import datetime
-from typing import NamedTuple
-from loguru import logger
+import json
+import re
 import ssl
-import certifi
+import urllib.request
+from http.cookiejar import CookieJar
+from typing import NamedTuple
 
 from bs4 import BeautifulSoup
 
@@ -40,6 +37,16 @@ class Receivables(NamedTuple):
     costs_fixed: float
     costs_meal: float
     costs_additional: float
+
+
+def _determine_year_start():
+    today = datetime.date.today()
+    month = today.month
+    year = today.year
+    delta = 0
+    if month < 9:
+        delta = -1
+    return year - delta
 
 
 class Iprzedszkole(Client):
@@ -111,16 +118,9 @@ class Iprzedszkole(Client):
     def get_receivables(self):
         if not self.logged_in:
             raise ConnectionError
-        request_payload_2 = "{idDziecko: %s, rokStart:2021, listViewName:Szczegoly}" % self.child_master_id
 
-        strings = '{"args": {"dzieckoId": 22347, "rokStart": "2021", "listViewName": "Szczegoly"}}'
-
-        appDict = {
-            'dzieckoId': self.child_master_id,
-            'rokStart': "2021",
-            'listViewName': 'Szczegoly'
-        }
-        app_json = json.dumps(appDict)
+        strings = f'{{"args": {{"dzieckoId": {self.child_master_id}, "rokStart": "{_determine_year_start()}", ' \
+                  f'"listViewName": "Szczegoly"}}}} '
 
         request = urllib.request.Request(
             self.URL_BASE + self.URL_RECEIVABLES_ANNUAL)
@@ -128,9 +128,17 @@ class Iprzedszkole(Client):
         request.add_header('Content-Type', 'application/json; charset=utf-8')
         result = self.opener.open(request).read()
 
-        zbigniew = json.loads(result)
-        okresy = zbigniew["d"]["ListData"]
-        amounts_summary = okresy[-2]
+        result = json.loads(result)
+        periods = result["d"]["ListData"]
+        amounts_summary = None
+        today = datetime.date.today()
+        month = today.month
+        year = today.year
+        for period in periods:
+            if period['Rok'] == year and period["Miesiac"] == month:
+                amounts_summary = period
+        if amounts_summary is None:
+            raise ValueError()
         summary_to_pay = amounts_summary["DoZaplaty"]
         summary_paid = amounts_summary["Zaplacono"]
         summary_overdue = amounts_summary["Zaleglosc"]
