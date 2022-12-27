@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from Client import Client
@@ -37,12 +38,18 @@ class Mailer(Client):
         report = DailyMessage()
         data = self.book.payment_list
         data = pb.sort_payment_list_by_date(data)
-        sum_total = sum(payment_li.payment.amount for payment_li in data)
-        logger.info(f'Sum total: {sum_total} zł')
+        today = datetime.datetime.now()
+        month = today.month
+        year = today.year
+        sum_total = sum(payment_li.payment.amount for payment_li in data if
+                        payment_li.payment.due_date.year == year and payment_li.payment.due_date.month == month)
         data2: List[PaymentListItem] = []
         for pmt in data:
             if not pmt.payment.paid:
                 data2.append(pmt)
+                if pmt.payment.due_date.year != year or pmt.payment.due_date.month != month:
+                    sum_total += pmt.payment.amount
+        logger.info(f'Sum total: {sum_total} zł')
         sum_unpaid = sum(payment_li.payment.amount for payment_li in data2)
         logger.info(f'Sum unpaid: {sum_unpaid} zł')
         progress = floor(((sum_total - sum_unpaid) / sum_total) * 100)
