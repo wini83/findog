@@ -45,7 +45,7 @@ def _determine_year_start():
     year = today.year
     delta = 0
     if month < 9:
-        delta = -1
+        delta = 1
     return year - delta
 
 
