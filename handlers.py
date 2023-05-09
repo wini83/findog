@@ -164,7 +164,7 @@ class IPrzedszkoleHandler(AbstractHandler):
             iprzedszkole_str = \
                 f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
                 f'Total cost: {total_cost:.2f} PLN, unpaid: PLN {result.summary_overdue:.2f}, ' \
-                f'overpaid:PLN {result.summary_overpayment:.2f} '
+                f'overpaid:PLN {result.summary_overpayment:.2f}, to pay {result.summary_to_pay:.2f}'
             logger.info(iprzedszkole_str)
             context.statuses.append(iprzedszkole_str)
         except:
