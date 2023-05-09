@@ -21,3 +21,6 @@ class Pushover(Client):
                          "message": message,
                      }), {"Content-type": "application/x-www-form-urlencoded"})
         conn.getresponse()
+
+    def error(self, message):
+        self.notify(f'ERROR:{message}')

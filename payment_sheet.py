@@ -80,20 +80,31 @@ class PaymentSheet:
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
             item: PaymentCategory = PaymentCategory(name=name, column=column)
-            amount = float(self._sheet[f"{column}{active_row}"].value)
-            column_int = self._sheet[f"{column}{active_row}"].col_idx
-            try:
-                paid = bool(self._sheet.cell(column=column_int + 1, row=active_row).value)
-            except ValueError:
-                paid = False
+            comment = self._sheet[f"{column}1"].comment
+            if comment is None:
+                item.icon = "fa-camera"
+            else:
+                item.icon = comment.text.strip()
+            processed_row = active_row
+            while self._sheet[f"{column}{processed_row}"].value is not None and processed_row>1:
+                column_int, due_date, new_payment = self.populate_payment(processed_row, column)
+                item.payments[f'{due_date.year}-{due_date.month}'] = new_payment
 
-            due_date: datetime = self._sheet.cell(column=column_int + 2, row=active_row).value
-            new_payment = Payment(paid=paid, due_date=due_date, amount=amount, excel_row=active_row)
-            item.payments[f'{due_date.year}-{due_date.month}'] = new_payment
-
-            self._categories[item.name] = item
-            self.format_payment(column_int, new_payment)
+                self._categories[item.name] = item
+                self.format_payment(column_int, new_payment)
+                processed_row -= 1
         self._format_this_month_cells(active_row)
+
+    def populate_payment(self, active_row, column):
+        amount = float(self._sheet[f"{column}{active_row}"].value)
+        column_int = self._sheet[f"{column}{active_row}"].col_idx
+        try:
+            paid = bool(self._sheet.cell(column=column_int + 1, row=active_row).value)
+        except ValueError:
+            paid = False
+        due_date: datetime = self._sheet.cell(column=column_int + 2, row=active_row).value
+        new_payment = Payment(paid=paid, due_date=due_date, amount=amount, excel_row=active_row)
+        return column_int, due_date, new_payment
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     def _format_this_month_cells(self, active_row: int):
@@ -184,7 +195,7 @@ class PaymentSheet:
         cell_this_month_sum: Cell = self.sheet.cell(column=2, row=current_row)
         cell_next_month_sum: Cell = self.sheet.cell(column=2, row=current_row + 1)
         if cell_next_month_sum.value is None:
-            cell_next_month_sum.value = self._generate_sum_string(current_row)
+            cell_next_month_sum.value = self._generate_sum_string(current_row+1)
             cell_next_month_sum.number_format = cell_this_month_sum.number_format
             cell_next_month_sum.font = copy(cell_this_month_sum.font)
             cell_next_month_sum.border = copy(cell_this_month_sum.border)

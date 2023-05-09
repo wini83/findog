@@ -4,16 +4,31 @@ from base64 import b64decode
 from datetime import datetime
 
 from json import JSONDecodeError
+from typing import NamedTuple
 from urllib import request
 from urllib.error import URLError
 
 from Client import Client
-from payment_book import PaymentBook
 
 
 def seconds_from_epoch() -> int:
     from_epoch = datetime.now().timestamp().__floor__()
     return int(from_epoch)
+
+
+def parse_date(string_input):
+    shorted = string_input[0:10]
+    formt = "%Y-%m-%d"
+    result = datetime.strptime(shorted, formt)
+    return result
+
+
+class EkartotekaResult(NamedTuple):
+    apartment_fee: float
+    delta: float
+    paid: bool
+    force_unpaid: bool
+    update_dates: dict
 
 
 class Ekartoteka(Client):
@@ -23,6 +38,7 @@ class Ekartoteka(Client):
     URL_PREMISES = "https://e-kartoteka.pl/api/oplatymiesieczne/lokale/?id_a_do={}&id_kli={}"
     URL_MOTHLY_FEES_SUM = "https://e-kartoteka.pl/api/oplatymiesieczne/oplatymiesiecznenalokale/suma/?id_a_do={" \
                           "}&id_kli={} "
+    URL_UPDATE_DATES = "https://e-kartoteka.pl/api/uzytkownicy/datyaktualizacji/?id_a_do={}&id_kli={}&pageSize=50"
     token: str
     _creditentials = None
     user_full_name: str = None
@@ -30,10 +46,8 @@ class Ekartoteka(Client):
     user_id: int
     client_id: int
     token_expire: int
-    _payment_book: PaymentBook = None
 
-    def __init__(self, creditentials, payment_book: PaymentBook):
-        self._payment_book = payment_book
+    def __init__(self, creditentials):
         self._creditentials = creditentials
 
     def _get_token(self):
@@ -165,11 +179,37 @@ class Ekartoteka(Client):
         except ValueError:
             return False, "Wrong response structure"
 
-    def update_payment_book(self, sheet_name: str, category_name: str):
+    def get_update_stamp(self):
+        if self.token is None:
+            return False, "Not initialized"
+        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        url = self.URL_UPDATE_DATES.format(self.user_id, self.client_id)
+        req = request.Request(url, headers=headers)
+        try:
+            response = request.urlopen(req)
+            reader = codecs.getreader("utf-8")
+            # Parse Json
+            data = json.load(reader(response))
+            table = data["results"]
+            updates = {}
+            monitored_cats = ["DK", "DKL", "SRC", "LI", "NL", "NRB", "STL"]
+            for item in table:
+                for category in monitored_cats:
+                    if item['typ'] == category:
+                        updates[category] = parse_date(item['data'])
+            return updates
+        except URLError:
+            return False, "Network Problem"
+        except JSONDecodeError:
+            return False, "Response is not Json;"
+        except ValueError:
+            return False, "Wrong response structure"
+
+    def get_payment_status(self):
         # TODO: not initialized
         apartment_fee = self.get_curret_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
-
+        dates = self.get_update_stamp()
         if res_setl and delta is not None:
             if delta > 0:
                 paid = False
@@ -178,8 +218,18 @@ class Ekartoteka(Client):
         else:
             paid = None
         now = datetime.now()
-        # TODO: recognition of Ekartoteka update
-        if now.day < 8:
-            paid = None
-        self._payment_book.update_current_payment(sheet_name, category_name, amount=apartment_fee, paid=paid)
-        return apartment_fee, delta
+        li = dates["LI"]
+        if now.month != li.month:
+            apartment_fee = 666.66
+            paid = False
+            force_unpaid = True
+        else:
+            if now.day < 25:
+                force_unpaid = False
+            else:
+                force_unpaid = True
+        return EkartotekaResult(apartment_fee=apartment_fee,
+                                delta=delta,
+                                paid=paid,
+                                force_unpaid=force_unpaid,
+                                update_dates=dates)
