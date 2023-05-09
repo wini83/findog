@@ -6,11 +6,11 @@ from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
-from enea import Enea,EneaResults
+from enea import Enea, EneaResults
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
 from payment_list_item import PaymentListItem
-
+from datetime import datetime
 
 
 class Handler(ABC):
@@ -155,12 +155,18 @@ class IPrzedszkoleHandler(AbstractHandler):
                 paid = False
             else:
                 paid = True
+            now = datetime.now()
+            if now.day < 25:
+                force_unpaid = False
+            else:
+                force_unpaid = True
             if not self.without_update:
                 context.payment_book.update_current_payment(
                     sheet_name=context.iprzedszkole_sheet[0],
                     category_name=context.iprzedszkole_sheet[1],
                     amount=total_cost,
-                    paid=paid)
+                    paid=paid,
+                    force_unpaid=force_unpaid)
             iprzedszkole_str = \
                 f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
                 f'Total cost: {total_cost:.2f} PLN, unpaid: PLN {result.summary_overdue:.2f}, ' \
@@ -186,7 +192,7 @@ class EneaHandler(AbstractHandler):
                 context.enea_credentials["username"],
                 context.enea_credentials["password"])
             enea.login()
-            enea_results:EneaResults = enea.get_data()
+            enea_results: EneaResults = enea.get_data()
             enea_str = f'ENEA: ' \
                        f'Last invoice issue date: {enea_results.last_invoice_date:%Y-%m-%d}; ' \
                        f'Last invoice due date: {enea_results.last_invoice_due_date:%Y-%m-%d}; ' \
@@ -201,8 +207,9 @@ class EneaHandler(AbstractHandler):
             else:
                 paid = True
             if not self.without_update:
-                today = datetime.datetime.now()
-                if enea_results.last_invoice_due_date.month == today.month and enea_results.last_invoice_due_date.year == today.year:
+                today = datetime.now()
+                if enea_results.last_invoice_due_date.month == today.month \
+                        and enea_results.last_invoice_due_date.year == today.year:
                     context.payment_book.update_current_payment(
                         sheet_name=context.enea_sheet[0],
                         category_name=context.enea_sheet[1],

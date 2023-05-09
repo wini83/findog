@@ -70,11 +70,12 @@ class PaymentBook:
                         pmt.amount = amount
                         cell_amount.value = amount
                     if paid is not None:
-                        pmt.paid = paid
                         if not paid:
                             if force_unpaid:
                                 cell_paid.value = int(paid)
+                                pmt.paid = paid
                         else:
+                            pmt.paid = paid
                             cell_paid.value = int(paid)
                     if due_date is not None:
                         pmt.due_date = due_date
