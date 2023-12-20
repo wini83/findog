@@ -38,6 +38,7 @@ class HandlerContext:
         self.gmail_user = config.gmail_user
         self.gmail_pass = config.gmail_pass
         self.statuses = []
+        self.nju_credentials = config.nju_credentials
 
     @property
     def excel_file_name(self):

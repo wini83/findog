@@ -2,7 +2,7 @@ import click
 
 from context import HandlerContext
 from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
-    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler, EneaHandler
+    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler, EneaHandler, NjuHandler
 from loguru import logger
 
 from os import chdir, path
@@ -37,6 +37,7 @@ A simple program to keep your payments in check
     no = NotifyOngoingHandler()
     ek = EkartotekaHandler()
     ip = IPrzedszkoleHandler()
+    nj = NjuHandler()
     sv = SaveFileLocallyHandler()
     ma = MailingHandler()
     ma.run_dry = mailrundry
@@ -53,6 +54,7 @@ A simple program to keep your payments in check
         if not noenea:
             handler = handler.set_next(en)
         #if not silent: TODO: better logic silent
+        handler = handler.set_next(nj)
         handler = handler.set_next(ma)
         handler = handler.set_next(sv)
         if not nocommit:

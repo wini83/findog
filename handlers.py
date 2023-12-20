@@ -4,11 +4,13 @@ from abc import ABC, abstractmethod
 
 from loguru import logger
 
+import nju
 from context import HandlerContext
 from ekartoteka import Ekartoteka
 from enea import Enea, EneaResults
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
+from nju import Nju, filter_not_paid, filter_by_current_period
 from payment_list_item import PaymentListItem
 from datetime import datetime
 
@@ -136,6 +138,38 @@ class EkartotekaHandler(AbstractHandler):
 
     def __str__(self):
         return "Ekartoteka"
+
+
+class NjuHandler(AbstractHandler):
+    without_update: bool = False
+
+    def handle(self, context: HandlerContext) -> HandlerContext:
+        logger.info("nju")
+        try:
+            queue_accounts = []
+            for account in context.nju_credentials:
+                nju_client = Nju(account["phone"], account["password"])
+                account_dict = {"client": nju_client, "sheet": account["sheet"], "category": account["cat"]}
+                queue_accounts.append(account_dict)
+
+            invoices = []
+            for account in queue_accounts:
+                account["client"].login()
+                table = account["client"].parse_html()
+                table2 = filter_by_current_period(table)
+                invoices.extend(table2)
+            log_str = "Nju:"
+            for invoice in invoices:
+                log_str+=nju.preety_print(invoice)
+            logger.info(log_str)
+            context.statuses.append(log_str)
+        except:
+            logger.exception("Problem with nju")
+            context.pushover.error("Problem with nju")
+        return super().handle(context)
+
+    def __str__(self):
+        return "Nju"
 
 
 class IPrzedszkoleHandler(AbstractHandler):
