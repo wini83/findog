@@ -49,7 +49,7 @@ class PaymentBook:
                                amount: float = None,
                                paid: bool = None,
                                due_date: datetime = None,
-                               force_unpaid:bool = None):
+                               force_unpaid: bool = None):
         # TODO: refactor
         sheet: PaymentSheet = self._payment_sheets[sheet_name]
         if sheet.name == sheet_name:

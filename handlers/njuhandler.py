@@ -4,7 +4,7 @@ from loguru import logger
 
 from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
-from api_clients.nju_client import Nju, filter_by_current_period, filter_not_paid,print_summary
+from api_clients.nju_client import Nju, filter_by_current_period, filter_not_paid, print_summary
 
 
 class NjuHandler(AbstractHandler):
@@ -29,12 +29,12 @@ class NjuHandler(AbstractHandler):
                 log_str += print_summary(account["invoices_payable"], text_if_none="no unpaid invoices")
                 log_str += "}"
                 if not self.without_update:
-                    if len(account["invoices_current"])>0:
-                        total:float = 0.0
-                        paid:bool = True
+                    if len(account["invoices_current"]) > 0:
+                        total: float = 0.0
+                        paid: bool = True
                         due_date = datetime.combine(account["invoices_current"][0].due_date, datetime.min.time())
                         for invoice in account["invoices_current"]:
-                            total+=invoice.total()
+                            total += invoice.total()
                             if not invoice.status_bool():
                                 paid = False
                         context.payment_book.update_current_payment(
@@ -44,8 +44,7 @@ class NjuHandler(AbstractHandler):
                             paid=paid,
                             due_date=due_date,
                             force_unpaid=True
-                                                                    )
-
+                        )
 
             logger.info(log_str)
             context.statuses.append(log_str)

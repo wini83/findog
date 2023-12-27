@@ -1,7 +1,8 @@
 import click
 
 from handlers.context import HandlerContext
-from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
+from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, \
+    FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
 from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
 from handlers.njuhandler import NjuHandler

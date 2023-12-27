@@ -7,5 +7,6 @@ class Client(ABC):
     def login(self):
         pass
 
+
 class NotInitializedError(Exception):
     pass

@@ -45,7 +45,7 @@ class EneaHandler(AbstractHandler):
             logger.info(enea_str)
             context.statuses.append(enea_str)
         except Exception as e:
-            logger.exception("Problem with Enea",)
+            logger.exception("Problem with Enea", exc_info=e)
             context.pushover.error("Problem with Enea")
         return super().handle(context)
 

@@ -29,6 +29,7 @@ def get_last_month_int():
     last_month = last_month.month
     return last_month
 
+
 @dataclass
 class EneaResults:
     last_invoice_date: datetime

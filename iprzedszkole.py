@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 from api_clients.Client import Client
 
 
-
 def _extract_amounts_main(bs, ident):
     div = bs.find("div", id=ident)
     amount_str = div.get_text().split(' ')[0].replace(",", ".")
