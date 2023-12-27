@@ -13,6 +13,10 @@ from dataclasses import dataclass, fields
 
 # noinspection SpellCheckingInspection
 PAID = "zapłacona"
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 ' \
+             'Safari/537.36 '
+LOGIN_URL = "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury"
+POST_URL = "https://www.njumobile.pl/logowanie?_DARGS=/profile-processes/login/login.jsp.portal-login-form"
 
 
 def pretty_print_invoice(item: dict):
@@ -125,17 +129,28 @@ def filter_by_current_period(table: List[NjuInvoice]):
 
 
 def filter_not_paid(table: List[NjuInvoice]):
-    list_out = list(filter(lambda x: x.status_bool, table))
+    list_out = list(filter(lambda x: not x.status_bool, table))
     return list_out
 
 
+def print_summary(table: List[NjuInvoice], text_if_none: str = "") -> str:
+    result: str = ""
+    if len(table) > 0:
+        total: float = 0
+        ids: str = ""
+        for invoice in table:
+            ids += f'{invoice.doc_id};'
+            total += invoice.total()
+        result += f"invoice numbers: {ids}; total {total:.2f} PLN; due date: {table[0].due_date}"
+    else:
+        result += text_if_none
+    return result
+
+
 class Nju:
-    USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 ' \
-                 'Safari/537.36 '
-    LOGIN_URL = "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury"
 
     def __init__(self, phone_nmb: str, password: str):
-        self.userAgent = self.USER_AGENT
+        self.userAgent = USER_AGENT
         self.opener = None
         self.logged_in: bool = False
         self.scrapped_html = None
@@ -147,16 +162,14 @@ class Nju:
         cj = CookieJar()
         # ssl._create_default_https_context = ssl._create_unverified_context
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-        request = urllib.request.Request(self.LOGIN_URL)
-        request.add_header('User-Agent', self.USER_AGENT)
+        request = urllib.request.Request(LOGIN_URL)
+        request.add_header('User-Agent', USER_AGENT)
         try:
             result = self.opener.open(request).read()
             result = result.decode('utf-8')
 
             tree = html.fromstring(result)
             authenticity_token = list(set(tree.xpath("//input[@name='_dynSessConf']/@value")))[0]
-
-            post_url = "https://www.njumobile.pl/logowanie?_DARGS=/profile-processes/login/login.jsp.portal-login-form"
 
             # noinspection SpellCheckingInspection
             payload = {
@@ -175,7 +188,7 @@ class Nju:
                 "_DARGS": "/profile-processes/login/login.jsp.portal-login-form"}
 
             form_data = urllib.parse.urlencode(payload)
-            request = urllib.request.Request(post_url)
+            request = urllib.request.Request(POST_URL)
             request.data = form_data.encode('utf-8')
             request.add_header('User-Agent', self.userAgent)
             request.add_header("Origin", "https://www.njumobile.pl")
