@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from api_clients.Client import Client
+from api_clients.client import Client
 from gmail_adapter import GmailAdapter
 from messages import DailyMessage
 from payment_book import PaymentBook

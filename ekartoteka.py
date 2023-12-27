@@ -8,7 +8,7 @@ from typing import NamedTuple
 from urllib import request
 from urllib.error import URLError
 
-from api_clients.Client import Client, NotInitializedError
+from api_clients.client import Client, NotInitializedError
 
 
 def seconds_from_epoch() -> int:

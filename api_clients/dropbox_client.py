@@ -5,7 +5,7 @@ from dropbox.exceptions import ApiError
 from dropbox.files import WriteMode
 from loguru import logger
 
-from api_clients.Client import Client
+from api_clients.client import Client
 
 
 class DropboxClient(Client):
