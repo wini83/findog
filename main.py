@@ -9,7 +9,7 @@ from os import chdir, path
 
 chdir(path.dirname(path.abspath(__file__)))
 
-logger.add("findog.log", rotation="1 week")
+logger.add("./logs/findog.log", rotation="1 week")
 
 
 @click.command()

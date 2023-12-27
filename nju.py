@@ -126,7 +126,7 @@ class Nju():
             self.logged_in = True
             result_str = result.read().decode('utf-8')
             self.scrapped_html = result_str
-        except:
+        except Exception as e:
             self.logged_in = False
 
     def parse_html(self):
@@ -147,7 +147,7 @@ class Nju():
         self.parsed = True
         return table
 
-    def write2file(self, payload):
+    def write2file(self):
         if self.logged_in:
             file = open('wynik.html', 'w', encoding='utf-8')
             file.write(self.scrapped_html)
