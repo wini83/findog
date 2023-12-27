@@ -1,8 +1,9 @@
 import click
 
 from context import HandlerContext
-from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
-    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler, EneaHandler, NjuHandler
+from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
+    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler, EneaHandler
+from handlers.njuhandler import NjuHandler
 from loguru import logger
 
 from os import chdir, path

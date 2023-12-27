@@ -1,55 +1,16 @@
 import datetime
 import sys
-from abc import ABC, abstractmethod
+from datetime import datetime
 
 from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
 from enea import Enea, EneaResults
+from handlers.handler import AbstractHandler
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
-from nju import Nju, filter_not_paid, filter_by_current_period
 from payment_list_item import PaymentListItem
-from datetime import datetime
-
-
-class Handler(ABC):
-    """
-    The Handler interface declares a method for building the chain of handlers.
-    It also declares a method for executing a request.
-    """
-
-    @abstractmethod
-    def set_next(self, handler):
-        pass
-
-    @abstractmethod
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        pass
-
-
-class AbstractHandler(Handler):
-    """
-    The default chaining behavior can be implemented inside a base handler
-    class.
-    """
-
-    _next_handler: Handler = None
-
-    def set_next(self, handler: Handler) -> Handler:
-        self._next_handler = handler
-        # Returning a handler from here will let us link handlers in a
-        # convenient way like this:
-        # monkey.set_next(squirrel).set_next(dog)
-        logger.info(f'Handler: {self.__str__()} - next handler is {handler.__str__()}')
-        return handler
-
-    @abstractmethod
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        if self._next_handler:
-            return self._next_handler.handle(context)
-        return context
 
 
 class FileDownloadHandler(AbstractHandler):
@@ -137,38 +98,6 @@ class EkartotekaHandler(AbstractHandler):
 
     def __str__(self):
         return "Ekartoteka"
-
-
-class NjuHandler(AbstractHandler):
-    without_update: bool = False
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("nju")
-        try:
-            queue_accounts = []
-            for account in context.nju_credentials:
-                nju_client = Nju(account["phone"], account["password"])
-                account_dict = {"client": nju_client, "sheet": account["sheet"], "category": account["cat"]}
-                queue_accounts.append(account_dict)
-
-            invoices = []
-            for account in queue_accounts:
-                account["client"].login()
-                table = account["client"].parse_html()
-                table2 = filter_by_current_period(table)
-                invoices.extend(table2)
-            log_str = "Nju:"
-            for invoice in invoices:
-                log_str += invoice.pretty_print()
-            logger.info(log_str)
-            context.statuses.append(log_str)
-        except Exception as e:
-            logger.exception("Problem with nju", exc_info=e)
-            context.pushover.error("Problem with nju")
-        return super().handle(context)
-
-    def __str__(self):
-        return "Nju"
 
 
 class IPrzedszkoleHandler(AbstractHandler):
