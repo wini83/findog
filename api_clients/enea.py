@@ -1,12 +1,11 @@
 import datetime
-import ssl
 import urllib.request
+from dataclasses import dataclass
 from http.cookiejar import CookieJar
-from typing import NamedTuple
 
 from bs4 import BeautifulSoup
 
-from Client import Client
+from api_clients.Client import Client
 
 
 def _extract_amounts_main(bs):
@@ -31,6 +30,7 @@ def get_last_month_int():
     return last_month
 
 
+@dataclass
 class EneaResults:
     last_invoice_date: datetime
     last_invoice_due_date: datetime
@@ -123,7 +123,7 @@ class Enea(Client):
 
     def login(self):
         cj = CookieJar()
-        ssl._create_default_https_context = ssl._create_unverified_context
+        # ssl._create_default_https_context = ssl._create_unverified_context
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
         request = urllib.request.Request(self.URL_BASE + self.URL_LOGIN)
         request.add_header('User-Agent', self.userAgent)
@@ -146,8 +146,11 @@ class Enea(Client):
 
         result = self.opener.open(request)
 
-        self.logged_in = True
-        # TODO:secure when status is not 200
+        if result.status == 200:
+            self.logged_in = True
+        else:
+            self.logged_in = False
+            raise ConnectionError
 
     def get_data(self) -> EneaResults:
 

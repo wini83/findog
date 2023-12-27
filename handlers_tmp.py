@@ -1,54 +1,14 @@
 import datetime
 import sys
-from abc import ABC, abstractmethod
+from datetime import datetime
 
 from loguru import logger
 
-from context import HandlerContext
-from ekartoteka import Ekartoteka
-from enea import Enea,EneaResults
+from handlers.context import HandlerContext
+from handlers.handler import AbstractHandler
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
 from payment_list_item import PaymentListItem
-
-
-
-class Handler(ABC):
-    """
-    The Handler interface declares a method for building the chain of handlers.
-    It also declares a method for executing a request.
-    """
-
-    @abstractmethod
-    def set_next(self, handler):
-        pass
-
-    @abstractmethod
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        pass
-
-
-class AbstractHandler(Handler):
-    """
-    The default chaining behavior can be implemented inside a base handler
-    class.
-    """
-
-    _next_handler: Handler = None
-
-    def set_next(self, handler: Handler) -> Handler:
-        self._next_handler = handler
-        # Returning a handler from here will let us link handlers in a
-        # convenient way like this:
-        # monkey.set_next(squirrel).set_next(dog)
-        logger.info(f'Handler: {self.__str__()} - next handler is {handler.__str__()}')
-        return handler
-
-    @abstractmethod
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        if self._next_handler:
-            return self._next_handler.handle(context)
-        return context
 
 
 class FileDownloadHandler(AbstractHandler):
@@ -110,34 +70,6 @@ class NotifyOngoingHandler(AbstractHandler):
         return "Notify Ongoing Payments"
 
 
-class EkartotekaHandler(AbstractHandler):
-    without_update: bool = False
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Ekartoteka")
-        ekart = Ekartoteka(context.ekartoteka_credentials)
-        ekart.login()
-        result = ekart.get_payment_status()
-
-        if not self.without_update:
-            context.payment_book.update_current_payment(
-                sheet_name=context.ekartoteka_sheet[0],
-                category_name=context.ekartoteka_sheet[1],
-                amount=result.apartment_fee,
-                paid=result.paid,
-                force_unpaid=result.force_unpaid)
-        ekart_str = \
-            f'EKARTOTEKA: apartment fee: PLN {result.apartment_fee:.2f} , unpaid: PLN {result.delta:.2f} Updates: '
-        for key, value in result.update_dates.items():
-            ekart_str = ekart_str + f' {key}-{value:%Y-%m-%d};'
-        logger.info(ekart_str)
-        context.statuses.append(ekart_str)
-        return super().handle(context)
-
-    def __str__(self):
-        return "Ekartoteka"
-
-
 class IPrzedszkoleHandler(AbstractHandler):
     without_update: bool = False
 
@@ -150,21 +82,26 @@ class IPrzedszkoleHandler(AbstractHandler):
                 context.iprzedszkole_credentials["password"])
             iprzedszkole.login()
             result: Receivables = iprzedszkole.get_receivables()
-            total_cost = result.costs_meal + result.costs_fixed + result.costs_additional
             if result.summary_overdue > 0:
                 paid = False
             else:
                 paid = True
+            now = datetime.now()
+            if now.day < 25:
+                force_unpaid = False
+            else:
+                force_unpaid = True
             if not self.without_update:
                 context.payment_book.update_current_payment(
                     sheet_name=context.iprzedszkole_sheet[0],
                     category_name=context.iprzedszkole_sheet[1],
-                    amount=total_cost,
-                    paid=paid)
+                    amount=result.summary_to_pay,
+                    paid=paid,
+                    force_unpaid=force_unpaid)
             iprzedszkole_str = \
                 f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
-                f'Total cost: {total_cost:.2f} PLN, unpaid: PLN {result.summary_overdue:.2f}, ' \
-                f'overpaid:PLN {result.summary_overpayment:.2f} '
+                f'Overdue: PLN {result.summary_overdue:.2f}, ' \
+                f'overpaid:PLN {result.summary_overpayment:.2f}, to pay {result.summary_to_pay:.2f}'
             logger.info(iprzedszkole_str)
             context.statuses.append(iprzedszkole_str)
         except:
@@ -174,51 +111,6 @@ class IPrzedszkoleHandler(AbstractHandler):
 
     def __str__(self):
         return "iPrzedszkole"
-
-
-class EneaHandler(AbstractHandler):
-    without_update: bool = False
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Enea")
-        try:
-            enea = Enea(
-                context.enea_credentials["username"],
-                context.enea_credentials["password"])
-            enea.login()
-            enea_results:EneaResults = enea.get_data()
-            enea_str = f'ENEA: ' \
-                       f'Last invoice issue date: {enea_results.last_invoice_date:%Y-%m-%d}; ' \
-                       f'Last invoice due date: {enea_results.last_invoice_due_date:%Y-%m-%d}; ' \
-                       f'Last invoice amount PLN: {enea_results.last_invoice_amount_PLN:.2f}; ' \
-                       f'Last invoice unpaid PLN: {enea_results.last_invoice_unpaid_pln:.2f}; ' \
-                       f'Last invoice status: {enea_results.last_invoice_status}; ' \
-                       f'Last readout date: {enea_results.last_readout_date:%Y-%m-%d};' \
-                       f'Last readout value kWh: {enea_results.last_readout_amount_kWh:.2f}'
-
-            if enea_results.last_invoice_unpaid_pln > 0:
-                paid = False
-            else:
-                paid = True
-            if not self.without_update:
-                today = datetime.datetime.now()
-                if enea_results.last_invoice_due_date.month == today.month and enea_results.last_invoice_due_date.year == today.year:
-                    context.payment_book.update_current_payment(
-                        sheet_name=context.enea_sheet[0],
-                        category_name=context.enea_sheet[1],
-                        amount=enea_results.last_invoice_amount_PLN,
-                        paid=paid, due_date=enea_results.last_invoice_due_date)
-                else:
-                    enea_str += " !Enea not updated in excel!"
-            logger.info(enea_str)
-            context.statuses.append(enea_str)
-        except:
-            logger.exception("Problem with Enea")
-            context.pushover.error("Problem with Enea")
-        return super().handle(context)
-
-    def __str__(self):
-        return "Enea"
 
 
 class SaveFileLocallyHandler(AbstractHandler):

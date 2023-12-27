@@ -1,15 +1,18 @@
 import click
 
-from context import HandlerContext
-from handlers import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
-    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler, EneaHandler
+from handlers.context import HandlerContext
+from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, \
+    FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
+from handlers.ekartotekahandler import EkartotekaHandler
+from handlers.eneahandler import EneaHandler
+from handlers.njuhandler import NjuHandler
 from loguru import logger
 
 from os import chdir, path
 
 chdir(path.dirname(path.abspath(__file__)))
 
-logger.add("findog.log", rotation="1 week")
+logger.add("./logs/findog.log", rotation="1 week")
 
 
 @click.command()
@@ -37,6 +40,7 @@ A simple program to keep your payments in check
     no = NotifyOngoingHandler()
     ek = EkartotekaHandler()
     ip = IPrzedszkoleHandler()
+    nj = NjuHandler()
     sv = SaveFileLocallyHandler()
     ma = MailingHandler()
     ma.run_dry = mailrundry
@@ -52,7 +56,8 @@ A simple program to keep your payments in check
             handler = handler.set_next(ip)
         if not noenea:
             handler = handler.set_next(en)
-        #if not silent: TODO: better logic silent
+        # if not silent: TODO: better logic silent
+        handler = handler.set_next(nj)
         handler = handler.set_next(ma)
         handler = handler.set_next(sv)
         if not nocommit:
@@ -66,6 +71,7 @@ A simple program to keep your payments in check
             ip.handle(ctx)
         if not noenea:
             en.handle(ctx)
+        nj.handle(ctx)
 
 
 if __name__ == '__main__':

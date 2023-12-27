@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from dropbox_client import DropboxClient
+from api_clients.dropbox_client import DropboxClient
 from payment_book import PaymentBook
 from pushover import Pushover
 import config
@@ -38,6 +38,7 @@ class HandlerContext:
         self.gmail_user = config.gmail_user
         self.gmail_pass = config.gmail_pass
         self.statuses = []
+        self.nju_credentials = config.nju_credentials
 
     @property
     def excel_file_name(self):
