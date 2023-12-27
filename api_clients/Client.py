@@ -6,3 +6,6 @@ class Client(ABC):
     @abstractmethod
     def login(self):
         pass
+
+class NotInitializedError(Exception):
+    pass

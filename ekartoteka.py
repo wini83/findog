@@ -8,7 +8,7 @@ from typing import NamedTuple
 from urllib import request
 from urllib.error import URLError
 
-from api_clients.Client import Client
+from api_clients.Client import Client, NotInitializedError
 
 
 def seconds_from_epoch() -> int:
@@ -48,6 +48,7 @@ class Ekartoteka(Client):
 
     def __init__(self, credentials):
         self._credentials = credentials
+        self._logged_in: bool = False
 
     def _get_token(self):
         headers = {"Content-type": "application/json"}
@@ -108,10 +109,11 @@ class Ekartoteka(Client):
         self._get_token()
         self._get_me()
         self._decode_token()
+        self._logged_in = True
 
     def get_settlements(self, year: int):
-        if self.token is None:
-            return False, "Not initialized"
+        if self.token is None or not self._logged_in:
+            raise NotInitializedError()
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_SETTLEMENTS.format(self.user_id, self.client_id, year)
         req = request.Request(url, headers=headers)
@@ -141,8 +143,8 @@ class Ekartoteka(Client):
             return True, balance
 
     def get_premises_data(self):
-        if self.token is None:
-            return False, "Not initialized"
+        if self.token is None or not self._logged_in:
+            raise NotInitializedError()
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_PREMISES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
@@ -161,8 +163,8 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_current_fees_sum(self):
-        if self.token is None:
-            return False, "Not initialized"
+        if self.token is None or not self._logged_in:
+            raise NotInitializedError()
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_MONTHLY_FEES_SUM.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
@@ -180,8 +182,8 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_update_stamp(self):
-        if self.token is None:
-            return False, "Not initialized"
+        if self.token is None or not self._logged_in:
+            raise NotInitializedError()
         headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
         url = self.URL_UPDATE_DATES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
@@ -206,7 +208,8 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_payment_status(self):
-        # TODO: not initialized
+        if self.token is None or not self._logged_in:
+            raise NotInitializedError()
         apartment_fee = self.get_current_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
         dates = self.get_update_stamp()
