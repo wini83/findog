@@ -68,6 +68,8 @@ A simple program to keep your payments in check
             ip.handle(ctx)
         if not noenea:
             en.handle(ctx)
+        nj.handle(ctx)
+
 
 
 if __name__ == '__main__':

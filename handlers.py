@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 from loguru import logger
 
-import nju
 from context import HandlerContext
 from ekartoteka import Ekartoteka
 from enea import Enea, EneaResults
@@ -160,11 +159,11 @@ class NjuHandler(AbstractHandler):
                 invoices.extend(table2)
             log_str = "Nju:"
             for invoice in invoices:
-                log_str+=nju.preety_print(invoice)
+                log_str += invoice.pretty_print()
             logger.info(log_str)
             context.statuses.append(log_str)
-        except:
-            logger.exception("Problem with nju")
+        except Exception as e:
+            logger.exception("Problem with nju", exc_info=e)
             context.pushover.error("Problem with nju")
         return super().handle(context)
 
