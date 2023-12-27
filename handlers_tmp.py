@@ -6,7 +6,7 @@ from loguru import logger
 
 from context import HandlerContext
 from ekartoteka import Ekartoteka
-from enea import Enea, EneaResults
+from api_clients.enea import Enea, EneaResults
 from handlers.handler import AbstractHandler
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
