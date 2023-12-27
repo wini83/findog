@@ -1,9 +1,9 @@
-import datetime
+from datetime import datetime
 
 from loguru import logger
 
 from api_clients.enea import Enea, EneaResults
-from context import HandlerContext
+from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
 
 
@@ -44,8 +44,8 @@ class EneaHandler(AbstractHandler):
                     enea_str += " !Enea not updated in excel!"
             logger.info(enea_str)
             context.statuses.append(enea_str)
-        except:
-            logger.exception("Problem with Enea")
+        except Exception as e:
+            logger.exception("Problem with Enea",)
             context.pushover.error("Problem with Enea")
         return super().handle(context)
 

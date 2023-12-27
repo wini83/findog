@@ -1,8 +1,8 @@
 import click
 
-from context import HandlerContext
-from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, EkartotekaHandler, \
-    FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
+from handlers.context import HandlerContext
+from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
+from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
 from handlers.njuhandler import NjuHandler
 from loguru import logger
@@ -55,7 +55,7 @@ A simple program to keep your payments in check
             handler = handler.set_next(ip)
         if not noenea:
             handler = handler.set_next(en)
-        #if not silent: TODO: better logic silent
+        # if not silent: TODO: better logic silent
         handler = handler.set_next(nj)
         handler = handler.set_next(ma)
         handler = handler.set_next(sv)
@@ -71,7 +71,6 @@ A simple program to keep your payments in check
         if not noenea:
             en.handle(ctx)
         nj.handle(ctx)
-
 
 
 if __name__ == '__main__':

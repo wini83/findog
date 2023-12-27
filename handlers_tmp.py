@@ -4,8 +4,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from context import HandlerContext
-from ekartoteka import Ekartoteka
+from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
 from iprzedszkole import Iprzedszkole, Receivables
 from mailer import Mailer
@@ -69,34 +68,6 @@ class NotifyOngoingHandler(AbstractHandler):
 
     def __str__(self):
         return "Notify Ongoing Payments"
-
-
-class EkartotekaHandler(AbstractHandler):
-    without_update: bool = False
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("Ekartoteka")
-        ekart = Ekartoteka(context.ekartoteka_credentials)
-        ekart.login()
-        result = ekart.get_payment_status()
-
-        if not self.without_update:
-            context.payment_book.update_current_payment(
-                sheet_name=context.ekartoteka_sheet[0],
-                category_name=context.ekartoteka_sheet[1],
-                amount=result.apartment_fee,
-                paid=result.paid,
-                force_unpaid=result.force_unpaid)
-        ekart_str = \
-            f'EKARTOTEKA: apartment fee: PLN {result.apartment_fee:.2f} , unpaid: PLN {result.delta:.2f} Updates: '
-        for key, value in result.update_dates.items():
-            ekart_str = ekart_str + f' {key}-{value:%Y-%m-%d};'
-        logger.info(ekart_str)
-        context.statuses.append(ekart_str)
-        return super().handle(context)
-
-    def __str__(self):
-        return "Ekartoteka"
 
 
 class IPrzedszkoleHandler(AbstractHandler):

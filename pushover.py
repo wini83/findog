@@ -1,7 +1,7 @@
 import http.client
 import urllib
 
-from Client import Client
+from api_clients.Client import Client
 
 
 class Pushover(Client):

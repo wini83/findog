@@ -1,3 +1,5 @@
+# TODO: obsolete
+
 api_key = "xxx"
 
 excel_file_path = "xxx"

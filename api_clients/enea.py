@@ -5,7 +5,7 @@ from http.cookiejar import CookieJar
 
 from bs4 import BeautifulSoup
 
-from Client import Client
+from api_clients.Client import Client
 
 
 def _extract_amounts_main(bs):

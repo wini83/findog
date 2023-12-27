@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 from bs4 import BeautifulSoup
 
-from Client import Client
+from api_clients.Client import Client
 
 
 

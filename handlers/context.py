@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from dropbox_client import DropboxClient
+from api_clients.dropbox_client import DropboxClient
 from payment_book import PaymentBook
 from pushover import Pushover
 import config

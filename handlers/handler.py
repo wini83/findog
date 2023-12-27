@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from loguru import logger
 
-from context import HandlerContext
+from handlers.context import HandlerContext
 
 
 class Handler(ABC):

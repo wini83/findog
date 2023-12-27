@@ -19,11 +19,11 @@ YELLOW_FILL = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 BLUE_FILL = PatternFill(fill_type='solid', start_color="6ED1FE")
 
 
-def add_months(sourcedate: datetime, months: int):
-    month = sourcedate.month - 1 + months
-    year = sourcedate.year + month // 12
+def add_months(source_date: datetime, months: int):
+    month = source_date.month - 1 + months
+    year = source_date.year + month // 12
     month = month % 12 + 1
-    day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+    day = min(source_date.day, calendar.monthrange(year, month)[1])
     return datetime(year, month, day)
 
 
@@ -86,7 +86,7 @@ class PaymentSheet:
             else:
                 item.icon = comment.text.strip()
             processed_row = active_row
-            while self._sheet[f"{column}{processed_row}"].value is not None and processed_row>1:
+            while self._sheet[f"{column}{processed_row}"].value is not None and processed_row > 1:
                 column_int, due_date, new_payment = self.populate_payment(processed_row, column)
                 item.payments[f'{due_date.year}-{due_date.month}'] = new_payment
 
@@ -152,11 +152,11 @@ class PaymentSheet:
         for category in self.categories.values():
             current_amount_cell: Cell = self.sheet[f'{category.column}{current_row}']
             current_paid_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 1)
-            current_duedate_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 2)
+            current_due_date_cell = self.sheet.cell(row=current_row, column=current_amount_cell.col_idx + 2)
 
             next_amount_cell: Cell = self.sheet[f'{category.column}{current_row + 1}']
             next_paid_cell = self.sheet.cell(row=current_row + 1, column=current_amount_cell.col_idx + 1)
-            next_duedate_cell = self.sheet.cell(row=current_row + 1, column=current_amount_cell.col_idx + 2)
+            next_due_date_cell = self.sheet.cell(row=current_row + 1, column=current_amount_cell.col_idx + 2)
             if next_amount_cell.value is None:
                 next_amount_cell.value = current_amount_cell.value
                 next_amount_cell.number_format = current_amount_cell.number_format
@@ -171,12 +171,12 @@ class PaymentSheet:
                 next_paid_cell.border = copy(current_paid_cell.border)
             next_paid_cell.fill = BLUE_FILL
 
-            if next_duedate_cell.value is None:
-                next_duedate_cell.value = add_months(current_duedate_cell.value, 1)
-                next_duedate_cell.number_format = current_duedate_cell.number_format
-                next_duedate_cell.font = copy(current_duedate_cell.font)
-                next_duedate_cell.border = copy(current_duedate_cell.border)
-            next_duedate_cell.fill = BLUE_FILL
+            if next_due_date_cell.value is None:
+                next_due_date_cell.value = add_months(current_due_date_cell.value, 1)
+                next_due_date_cell.number_format = current_due_date_cell.number_format
+                next_due_date_cell.font = copy(current_due_date_cell.font)
+                next_due_date_cell.border = copy(current_due_date_cell.border)
+            next_due_date_cell.fill = BLUE_FILL
         pass
 
     def _generate_sum_string(self, row: int):
@@ -195,7 +195,7 @@ class PaymentSheet:
         cell_this_month_sum: Cell = self.sheet.cell(column=2, row=current_row)
         cell_next_month_sum: Cell = self.sheet.cell(column=2, row=current_row + 1)
         if cell_next_month_sum.value is None:
-            cell_next_month_sum.value = self._generate_sum_string(current_row+1)
+            cell_next_month_sum.value = self._generate_sum_string(current_row + 1)
             cell_next_month_sum.number_format = cell_this_month_sum.number_format
             cell_next_month_sum.font = copy(cell_this_month_sum.font)
             cell_next_month_sum.border = copy(cell_this_month_sum.border)

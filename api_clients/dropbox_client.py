@@ -3,10 +3,9 @@ import string
 import dropbox
 from dropbox.exceptions import ApiError
 from dropbox.files import WriteMode
-
-from Client import Client
-
 from loguru import logger
+
+from api_clients.Client import Client
 
 
 class DropboxClient(Client):
@@ -33,9 +32,7 @@ class DropboxClient(Client):
             # We use WriteMode=overwrite to make sure that the settings in the file
             # are changed on upload
             f_bytes = f.read()
-            return self.commit_file_bytes(f_bytes,file_path)
-
-
+            return self.commit_file_bytes(f_bytes, file_path)
 
     def commit_file_bytes(self, file_local: bytes, file_path: string):
         try:
@@ -46,9 +43,9 @@ class DropboxClient(Client):
             # enough Dropbox space quota to upload this file
             if (err.error.is_path() and
                     err.error.get_path().reason.is_insufficient_space()):
-                print("ERROR: Cannot back up; insufficient space.")
+                logger.exception("ERROR:dropbox Cannot back up; insufficient space.")
             elif err.user_message_text:
-                print(err.user_message_text)
+                logger.exception(err.user_message_text)
             else:
-                print(err)
+                logger.exception(err)
             return False

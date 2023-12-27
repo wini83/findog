@@ -198,7 +198,7 @@ class Nju:
             result_str = result.read().decode('utf-8')
             self.scrapped_html = result_str
         except Exception as e:
-            logger.exception(e)
+            logger.exception("Nju client failed", exc_info=e)
             self.logged_in = False
 
     def parse_html(self):
