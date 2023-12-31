@@ -21,6 +21,7 @@ class HandlerContext:
     gmail_user: str
     gmail_pass: str
     statuses: List[str]
+    no_excel: bool
 
     def __init__(self, silent: bool = False):
         self.dropbox_client = DropboxClient(config.api_key)
@@ -39,6 +40,7 @@ class HandlerContext:
         self.gmail_pass = config.gmail_pass
         self.statuses = []
         self.nju_credentials = config.nju_credentials
+        self.no_excel = False
 
     @property
     def excel_file_name(self):

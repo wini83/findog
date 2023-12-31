@@ -71,7 +71,6 @@ class NotifyOngoingHandler(AbstractHandler):
 
 
 class IPrzedszkoleHandler(AbstractHandler):
-    without_update: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("iPrzedszkole")
@@ -91,7 +90,7 @@ class IPrzedszkoleHandler(AbstractHandler):
                 force_unpaid = False
             else:
                 force_unpaid = True
-            if not self.without_update:
+            if not context.no_excel:
                 context.payment_book.update_current_payment(
                     sheet_name=context.iprzedszkole_sheet[0],
                     category_name=context.iprzedszkole_sheet[1],

@@ -6,7 +6,6 @@ from handlers.handler import AbstractHandler
 
 
 class EkartotekaHandler(AbstractHandler):
-    without_update: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Ekartoteka")
@@ -14,7 +13,7 @@ class EkartotekaHandler(AbstractHandler):
         ekartoteka_client.login()
         result = ekartoteka_client.get_payment_status()
 
-        if not self.without_update:
+        if not context.no_excel:
             context.payment_book.update_current_payment(
                 sheet_name=context.ekartoteka_sheet[0],
                 category_name=context.ekartoteka_sheet[1],

@@ -8,7 +8,6 @@ from handlers.handler import AbstractHandler
 
 
 class EneaHandler(AbstractHandler):
-    without_update: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Enea")
@@ -31,7 +30,7 @@ class EneaHandler(AbstractHandler):
                 paid = False
             else:
                 paid = True
-            if not self.without_update:
+            if not context.no_excel:
                 today = datetime.now()
                 if enea_results.last_invoice_due_date.month == today.month \
                         and enea_results.last_invoice_due_date.year == today.year:

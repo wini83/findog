@@ -8,7 +8,6 @@ from api_clients.nju_client import Nju, filter_by_current_period, filter_not_pai
 
 
 class NjuHandler(AbstractHandler):
-    without_update: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("nju")
@@ -28,7 +27,7 @@ class NjuHandler(AbstractHandler):
                 log_str += f"phone:{account['client'].phone_nmb} - "
                 log_str += print_summary(account["invoices_payable"], text_if_none="no unpaid invoices")
                 log_str += "}"
-                if not self.without_update:
+                if not context.no_excel:
                     if len(account["invoices_current"]) > 0:
                         total: float = 0.0
                         paid: bool = True
