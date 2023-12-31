@@ -1,15 +1,12 @@
 import datetime
 import urllib
+from dataclasses import dataclass, fields
+from datetime import date
 from http.cookiejar import CookieJar
 from typing import List
 
-from lxml import html
 from bs4 import BeautifulSoup
-
-from datetime import date
-
 from loguru import logger
-from dataclasses import dataclass, fields
 
 # noinspection SpellCheckingInspection
 PAID = "zapłacona"
@@ -167,10 +164,9 @@ class Nju:
         try:
             result = self.opener.open(request).read()
             result = result.decode('utf-8')
-
-            tree = html.fromstring(result)
-            authenticity_token = list(set(tree.xpath("//input[@name='_dynSessConf']/@value")))[0]
-
+            login_soup = BeautifulSoup(result, 'html.parser')
+            input_field = login_soup.find("input", attrs={'name': "_dynSessConf"})
+            authenticity_token = input_field.attrs["value"]
             # noinspection SpellCheckingInspection
             payload = {
                 "_dyncharset": "UTF-8",

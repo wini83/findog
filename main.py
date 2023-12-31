@@ -71,6 +71,7 @@ A simple program to keep your payments in check
             ip.handle(ctx)
         if not noenea:
             en.handle(ctx)
+        nj.without_update = True
         nj.handle(ctx)
 
 
