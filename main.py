@@ -1,15 +1,15 @@
-import click
+from os import chdir, path
 
-from handlers.context import HandlerContext
-from handlers.handler import AbstractHandler
-from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, \
-    FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
-from handlers.ekartotekahandler import EkartotekaHandler
-from handlers.eneahandler import EneaHandler
-from handlers.njuhandler import NjuHandler
+import click
 from loguru import logger
 
-from os import chdir, path
+from handlers.context import HandlerContext
+from handlers.ekartotekahandler import EkartotekaHandler
+from handlers.eneahandler import EneaHandler
+from handlers.handler import Handler
+from handlers.njuhandler import NjuHandler
+from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, \
+    FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
 
 API_EKARTOTEKA = "ekartoteka"
 API_IPRZEDSZKOLE = "iprzedszkole"
@@ -21,7 +21,7 @@ chdir(path.dirname(path.abspath(__file__)))
 logger.add("./logs/findog.log", rotation="1 week")
 
 
-def get_default_handler(handler: AbstractHandler, starter: AbstractHandler, default_handler: AbstractHandler):
+def get_default_handler(handler: Handler, starter: Handler, default_handler: Handler):
     if handler is None:
         return default_handler, default_handler
     else:
@@ -66,16 +66,14 @@ A simple program to keep your payments in check
     mailer = MailingHandler()
     mailer.run_dry = not enable_notification
 
-    starter: AbstractHandler = None
-    handler: AbstractHandler = None
+    # noinspection PyTypeChecker
+    starter: Handler = None
+    # noinspection PyTypeChecker
+    handler: Handler = None
 
     if enable_dropbox:
-        file_downloader = FileDownloadHandler()
-        file_processor = FileProcessHandler()
-        file_saver = SaveFileLocallyHandler()
-        file_committer = FileCommitHandler()
-        starter = file_downloader
-        handler = file_downloader.set_next(file_processor)
+        starter = FileDownloadHandler()
+        handler = starter.set_next(FileProcessHandler())
     else:
         ctx.no_excel = True
 
@@ -96,9 +94,9 @@ A simple program to keep your payments in check
         if enable_notification:
             handler = handler.set_next(notifier)
         handler = handler.set_next(mailer)
-        handler = handler.set_next(file_saver)
+        handler = handler.set_next(SaveFileLocallyHandler())
         if not disable_commit:
-            handler.set_next(file_committer)
+            handler.set_next(FileCommitHandler())
     # Fire!!
     if starter is not None:
         starter.handle(ctx)
