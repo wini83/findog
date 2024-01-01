@@ -1,13 +1,9 @@
-import datetime
 import sys
-from datetime import datetime
 
 from loguru import logger
 
 from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
-from iprzedszkole import Iprzedszkole, Receivables
-from mailer import Mailer
 from payment_list_item import PaymentListItem
 
 
@@ -70,48 +66,6 @@ class NotifyOngoingHandler(AbstractHandler):
         return "Notify Ongoing Payments"
 
 
-class IPrzedszkoleHandler(AbstractHandler):
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-        logger.info("iPrzedszkole")
-        try:
-            iprzedszkole = Iprzedszkole(
-                context.iprzedszkole_credentials["kindergarten"],
-                context.iprzedszkole_credentials["username"],
-                context.iprzedszkole_credentials["password"])
-            iprzedszkole.login()
-            result: Receivables = iprzedszkole.get_receivables()
-            if result.summary_overdue > 0:
-                paid = False
-            else:
-                paid = True
-            now = datetime.now()
-            if now.day < 25:
-                force_unpaid = False
-            else:
-                force_unpaid = True
-            if not context.no_excel:
-                context.payment_book.update_current_payment(
-                    sheet_name=context.iprzedszkole_sheet[0],
-                    category_name=context.iprzedszkole_sheet[1],
-                    amount=result.summary_to_pay,
-                    paid=paid,
-                    force_unpaid=force_unpaid)
-            iprzedszkole_str = \
-                f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
-                f'Overdue: PLN {result.summary_overdue:.2f}, ' \
-                f'overpaid:PLN {result.summary_overpayment:.2f}, to pay {result.summary_to_pay:.2f}'
-            logger.info(iprzedszkole_str)
-            context.statuses.append(iprzedszkole_str)
-        except:
-            logger.exception("Problem with iprzedszkole")
-            context.pushover.error("Problem with iprzedszkole")
-        return super().handle(context)
-
-    def __str__(self):
-        return "iPrzedszkole"
-
-
 class SaveFileLocallyHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Saving file locally")
@@ -121,37 +75,6 @@ class SaveFileLocallyHandler(AbstractHandler):
 
     def __str__(self):
         return "Save File Locally"
-
-
-class MailingHandler(AbstractHandler):
-    run_dry: bool = False
-
-    def handle(self, context: HandlerContext) -> HandlerContext:
-
-        mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
-        mailer.statuses = context.statuses
-        try:
-            mailer.login()
-            logger.info("Rendering message")
-            payload = mailer.render()
-            logger.info("Rendering completed")
-            if not self.run_dry:
-                logger.info(f"There are {len(context.recipients)} mail(s) to send")
-                for recipient in context.recipients:
-                    mailer.send(recipient, payload)
-                    logger.info(f"mail to {recipient} send")
-                logger.info("sending mail completed")
-            else:
-                with open("output_mail.html", "wb") as html_file:
-                    html_file.write(payload.encode('utf-8'))
-        except:
-            # TODO: narrow exception
-            logger.exception("Problem with Mailer")
-            context.pushover.error("Problem with mailer")
-        return super().handle(context)
-
-    def __str__(self):
-        return "Mailer"
 
 
 class FileCommitHandler(AbstractHandler):

@@ -8,8 +8,10 @@ from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
 from handlers.handler import Handler
 from handlers.njuhandler import NjuHandler
-from handlers_tmp import SaveFileLocallyHandler, NotifyOngoingHandler, MailingHandler, FileDownloadHandler, \
-    FileProcessHandler, FileCommitHandler, IPrzedszkoleHandler
+from handlers.filehandlers import FileDownloadHandler, FileProcessHandler, NotifyOngoingHandler, SaveFileLocallyHandler, \
+    FileCommitHandler
+from handlers.iprzedszkolehandler import IPrzedszkoleHandler
+from handlers.mailinghandler import MailingHandler
 
 API_EKARTOTEKA = "ekartoteka"
 API_IPRZEDSZKOLE = "iprzedszkole"
@@ -21,11 +23,11 @@ chdir(path.dirname(path.abspath(__file__)))
 logger.add("./logs/findog.log", rotation="1 week")
 
 
-def get_default_handler(handler: Handler, starter: Handler, default_handler: Handler):
-    if handler is None:
-        return default_handler, default_handler
+def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler):
+    if current_handler is None:
+        return new_handler, new_handler
     else:
-        return handler.set_next(default_handler), starter
+        return current_handler.set_next(new_handler), starter
 
 
 @click.command(no_args_is_help=True)
@@ -79,16 +81,16 @@ A simple program to keep your payments in check
 
     if API_EKARTOTEKA in enable_api:
         poller_ekartoteka = EkartotekaHandler()
-        handler, starter = get_default_handler(handler, starter, poller_ekartoteka)
+        handler, starter = get_handler(handler, starter, poller_ekartoteka)
     if API_IPRZEDSZKOLE in enable_api:
         poller_iprzedszkole = IPrzedszkoleHandler()
-        handler, starter = get_default_handler(handler, starter, poller_iprzedszkole)
+        handler, starter = get_handler(handler, starter, poller_iprzedszkole)
     if API_ENEA in enable_api:
         poller_enea = EneaHandler()
-        handler, starter = get_default_handler(handler, starter, poller_enea)
+        handler, starter = get_handler(handler, starter, poller_enea)
     if API_NJU in enable_api:
         poller_nju = NjuHandler()
-        handler, starter = get_default_handler(handler, starter, poller_nju)
+        handler, starter = get_handler(handler, starter, poller_nju)
 
     if enable_dropbox:
         if enable_notification:
