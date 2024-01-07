@@ -34,7 +34,7 @@ class NjuHandler(AbstractHandler):
                         due_date = datetime.combine(account["invoices_current"][0].due_date, datetime.min.time())
                         for invoice in account["invoices_current"]:
                             total += invoice.total()
-                            if not invoice.status_bool():
+                            if not invoice.status_bool:
                                 paid = False
                         context.payment_book.update_current_payment(
                             sheet_name=account["sheet"],
