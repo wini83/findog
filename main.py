@@ -3,6 +3,7 @@ from os import chdir, path
 import click
 from loguru import logger
 
+from handlers.analyticshandler import AnalyticsHandler
 from handlers.context import HandlerContext
 from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
@@ -34,9 +35,11 @@ def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler
 @click.option("--enable-all", is_flag=True, help="Carry out the full process", default=False, )
 @click.option("--enable-dropbox", is_flag=True, help="Run with processing excel file, ignored with '--enable-all'",
               default=False)
-@click.option("--enable-notification", is_flag=True, help="Run without notifications,ignored with '--enable-all'",
+@click.option("--enable-notification", is_flag=True, help="Run with notifications,ignored with '--enable-all'",
               default=False)
-@click.option("--enable-api-all", is_flag=True, help="Run without all API clients, ignored with '--enable-all'",
+@click.option("--enable-api-all", is_flag=True, help="Run with all API clients, ignored with '--enable-all'",
+              default=False)
+@click.option("--enable-analytics", is_flag=True, help="Run with Analytics module, ignored with '--enable-all'",
               default=False)
 @click.option("--enable-api", help="Enable specific api, ignored with '--enable-all'", multiple=True)
 @click.option("--disable-commit", is_flag=True, help="Run without committing file to dropbox", default=False)
@@ -45,6 +48,7 @@ def main(enable_all,
          enable_notification,
          enable_api_all,
          enable_api,
+         enable_analytics,
          disable_commit
          ):
     """
@@ -95,6 +99,9 @@ A simple program to keep your payments in check
     if enable_dropbox:
         if enable_notification:
             handler = handler.set_next(notifier)
+        if enable_analytics:
+            anal = AnalyticsHandler()
+            handler = handler.set_next(anal)
         handler = handler.set_next(mailer)
         handler = handler.set_next(SaveFileLocallyHandler())
         if not disable_commit:
