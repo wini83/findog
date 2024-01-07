@@ -98,6 +98,7 @@ class NjuInvoice:
         result += "}"
         return result
 
+    @property
     def status_bool(self) -> bool:
         if self.status == PAID:
             return True
