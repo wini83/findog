@@ -34,9 +34,9 @@ def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler
 @click.option("--enable-all", is_flag=True, help="Carry out the full process", default=False, )
 @click.option("--enable-dropbox", is_flag=True, help="Run with processing excel file, ignored with '--enable-all'",
               default=False)
-@click.option("--enable-notification", is_flag=True, help="Run without notifications,ignored with '--enable-all'",
+@click.option("--enable-notification", is_flag=True, help="Run with notifications,ignored with '--enable-all'",
               default=False)
-@click.option("--enable-api-all", is_flag=True, help="Run without all API clients, ignored with '--enable-all'",
+@click.option("--enable-api-all", is_flag=True, help="Run with all API clients, ignored with '--enable-all'",
               default=False)
 @click.option("--enable-api", help="Enable specific api, ignored with '--enable-all'", multiple=True)
 @click.option("--disable-commit", is_flag=True, help="Run without committing file to dropbox", default=False)

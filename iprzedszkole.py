@@ -6,8 +6,6 @@ import urllib.request
 from http.cookiejar import CookieJar
 from typing import NamedTuple
 
-from bs4 import BeautifulSoup
-
 from api_clients.client import Client
 
 
