@@ -6,8 +6,6 @@ import urllib.request
 from http.cookiejar import CookieJar
 from typing import NamedTuple
 
-from bs4 import BeautifulSoup
-
 from api_clients.client import Client
 
 
@@ -57,6 +55,7 @@ class Iprzedszkole(Client):
     URL_MEAL_PLAN = '/iprzedszkole/Pages/PanelRodzica/Jadlospis/Jadlospis.aspx'
     URL_RECEIVABLES_ANNUAL = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneRaportRoczny'
     URL_RECEIVABLES = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/Naleznosci.aspx'
+    URL_RECEIVABLES_DATA = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneOplat'
 
     def __init__(self, kindergarten, login, password):
         self.kindergartenName = kindergarten
@@ -144,15 +143,29 @@ class Iprzedszkole(Client):
         summary_overdue = amounts_summary["Zaleglosc"]
         summary_overpayment = amounts_summary["Nadplata"]
 
-        request = urllib.request.Request(self.URL_BASE + self.URL_RECEIVABLES)
-        request.add_header('User-Agent', self.userAgent)
-        result = self.opener.open(request).read()
-        result = result.decode('utf-8')
-        bs = BeautifulSoup(result, 'html.parser')
+        strings = f'{{"idDziecko": "{self.child_master_id}"}} '
 
-        costs_fixed = _extract_amounts_main(bs, "ctl00_ContentPlaceHolder1_kwotaStale")
-        costs_meal = _extract_amounts_main(bs, "ctl00_ContentPlaceHolder1_kwotaPosilki")
-        costs_additional = _extract_amounts_main(bs, "ctl00_ContentPlaceHolder1_kwotaDodatkowe")
+        request2 = urllib.request.Request(
+            self.URL_BASE + self.URL_RECEIVABLES_DATA)
+        request2.data = strings.encode('utf-8')
+        request2.add_header('Content-Type', 'application/json; charset=utf-8')
+        result2 = self.opener.open(request2).read()
+
+        result2 = json.loads(result2)
+
+        receivables = result2["d"]["ListK"]
+
+        costs_fixed = 0
+        costs_meal = 0
+        costs_additional = 0
+
+        for receivable in receivables:
+            if receivable["RodzajOplaty"] == 0:
+                costs_fixed = receivable["Kwota"]
+            elif receivable["RodzajOplaty"] == 1:
+                costs_additional = receivable["Kwota"]
+            elif receivable["RodzajOplaty"] == 2:
+                costs_meal = receivable["Kwota"]
 
         return Receivables(
             summary_to_pay=summary_to_pay,
