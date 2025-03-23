@@ -20,6 +20,7 @@ class NjuHandler(AbstractHandler):
             log_str = "Nju:"
             for account in queue_accounts:
                 account["client"].login()
+                account["client"].write2file()
                 account["invoices"] = account["client"].parse_html()
                 account["invoices_current"] = filter_by_current_period(account["invoices"])
                 account["invoices_payable"] = filter_not_paid(account["invoices"])
