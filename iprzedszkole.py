@@ -1,10 +1,10 @@
 import datetime
 import json
 import re
-import ssl
-import urllib.request
-from http.cookiejar import CookieJar
 from typing import NamedTuple
+
+import requests
+from bs4 import BeautifulSoup
 
 from api_clients.client import Client
 
@@ -26,6 +26,16 @@ def get_last_month_int():
     last_month = last_month.month
     return last_month
 
+def aspnet_tokens(html):
+    bs = BeautifulSoup(html, "html.parser")
+    def v(name):
+        el = bs.find("input", {"name": name})
+        return el["value"] if el and el.has_attr("value") else ""
+    return {
+        "__VIEWSTATE": v("__VIEWSTATE"),
+        "__EVENTVALIDATION": v("__EVENTVALIDATION"),
+        "__VIEWSTATEGENERATOR": v("__VIEWSTATEGENERATOR"),
+    }
 
 class Receivables(NamedTuple):
     summary_to_pay: float
@@ -36,7 +46,6 @@ class Receivables(NamedTuple):
     costs_meal: float
     costs_additional: float
 
-
 def _determine_year_start():
     today = datetime.date.today()
     month = today.month
@@ -45,7 +54,6 @@ def _determine_year_start():
     if month < 9:
         delta = 1
     return year - delta
-
 
 class Iprzedszkole(Client):
     URL_BASE = 'https://iprzedszkole.progman.pl'
@@ -56,6 +64,9 @@ class Iprzedszkole(Client):
     URL_RECEIVABLES_ANNUAL = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneRaportRoczny'
     URL_RECEIVABLES = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/Naleznosci.aspx'
     URL_RECEIVABLES_DATA = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneOplat'
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    }
 
     def __init__(self, kindergarten, login, password):
         self.kindergartenName = kindergarten
@@ -65,109 +76,113 @@ class Iprzedszkole(Client):
         self.opener = None
         self.child_master_id = 0
         self.logged_in = False
+        self.session = None
+
+
 
     def login(self):
-        cj = CookieJar()
-        ssl._create_default_https_context = ssl._create_unverified_context
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-        request = urllib.request.Request(self.URL_BASE + self.URL_LOGIN)
-        request.add_header('User-Agent', self.userAgent)
-        result = self.opener.open(request).read()
-        result = result.decode('utf-8')
+        self.session = requests.Session()
+        self.session.headers.update(self.HEADERS)
 
-        view_state = re.search(
-            '<input\s+type="hidden"\s+name="__VIEWSTATE"\s+id="__VIEWSTATE"\s+value="([/+=\w]+)"\s+/>', result)
-        view_state = view_state.group(1)
+        # 1) GET login page -> cookies + tokens
+        r1 = self.session.get(self.URL_BASE + self.URL_LOGIN, timeout=20)
+        r1.raise_for_status()
+        tokens = aspnet_tokens(r1.text)
 
-        view_state_generator = re.search(
-            '<input\s+type="hidden"\s+name="__VIEWSTATEGENERATOR"\s+id="__VIEWSTATEGENERATOR"\s+value="([/+=\w]+)"\s+/>',
-            result)
-        view_state_generator = view_state_generator.group(1)
+        # 2) POST credentials + tokens (+ referer!)
+        payload = {
+            **tokens,
+            'ctl00$cphContent$txtDatabase': self.kindergartenName,
+            'ctl00$cphContent$txtLogin': self.kindergartenLogin,
+            'ctl00$cphContent$txtPassword': self.kindergartenPassword,
+            'ctl00$cphContent$ButtonLogin': 'Zaloguj'
+        }
+        r2 = self.session.post(self.URL_BASE + self.URL_LOGIN, data=payload, headers={"Referer": self.URL_BASE + self.URL_LOGIN}, timeout=20, allow_redirects=True)
+        r2.raise_for_status()
 
-        event_validation = re.search(
-            '<input\s+type="hidden"\s+name="__EVENTVALIDATION"\s+id="__EVENTVALIDATION"\s+value="([/+=\w]+)"\s+/>',
-            result)
-        event_validation = event_validation.group(1)
+        r3 = self.session.get(self.URL_BASE + self.URL_MEAL_PLAN, timeout=20)
 
-        form_parameters = {'__VIEWSTATE': view_state,
-                           '__VIEWSTATEGENERATOR': view_state_generator,
-                           '__EVENTVALIDATION': event_validation,
-                           "__EVENTTARGET": '',
-                           "__EVENTARGUMENT": '',
-                           'ctl00$cphContent$txtDatabase': self.kindergartenName,
-                           'ctl00$cphContent$txtLogin': self.kindergartenLogin,
-                           'ctl00$cphContent$txtPassword': self.kindergartenPassword,
-                           'ctl00$cphContent$Button1': 'Zaloguj'
-                           }
 
-        form_data = urllib.parse.urlencode(form_parameters)
-
-        request = urllib.request.Request(self.URL_BASE + self.URL_LOGIN)
-        request.data = form_data.encode('utf-8')
-        request.add_header('User-Agent', self.userAgent)
-        login_result = self.opener.open(request).read().decode('utf-8')
-
-        request = urllib.request.Request(self.URL_BASE + self.URL_MEAL_PLAN)
-        request.add_header('User-Agent', self.userAgent)
-        result = self.opener.open(request).read()
-        result = result.decode('utf-8')
-
-        child_master_id = re.search('<option\s+selected="selected"\s+value="(\d+)">', result)
+        child_master_id = re.search('<option\s+selected="selected"\s+value="(\d+)">', r3.text)
         self.child_master_id = child_master_id.group(1)
         self.logged_in = True
 
     def get_receivables(self):
-        if not self.logged_in:
-            raise ConnectionError
+        if not self.logged_in or not self.session:
+            raise ConnectionError("Najpierw wywołaj login().")
 
-        strings = f'{{"args": {{"dzieckoId": {self.child_master_id}, "rokStart": "{_determine_year_start()}", ' \
-                  f'"listViewName": "Szczegoly"}}}} '
+        # Wejście na stronę należności (dobry 'Referer'/kontekst dla ASMX)
+        r0 = self.session.get(self.URL_BASE + self.URL_RECEIVABLES, timeout=20)
+        r0.raise_for_status()
 
-        request = urllib.request.Request(
-            self.URL_BASE + self.URL_RECEIVABLES_ANNUAL)
-        request.data = strings.encode('utf-8')
-        request.add_header('Content-Type', 'application/json; charset=utf-8')
-        result = self.opener.open(request).read()
+        headers = {
+            "Content-Type": "application/json; charset=utf-8",
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": self.URL_BASE + self.URL_RECEIVABLES,
+        }
 
-        result = json.loads(result)
-        periods = result["d"]["ListData"]
-        amounts_summary = None
+        # --- 1) Raport roczny -> wyciąg sum dla bieżącego miesiąca ---
+        year_start = _determine_year_start()
+        payload_annual = {
+            "args": {
+                "dzieckoId": int(self.child_master_id),
+                "rokStart": str(year_start),
+                "listViewName": "Szczegoly",
+            }
+        }
+        r1 = self.session.post(
+            self.URL_BASE + self.URL_RECEIVABLES_ANNUAL,
+            data=json.dumps(payload_annual),
+            headers=headers,
+            timeout=20,
+        )
+        r1.raise_for_status()
+        data1 = r1.json()  # klasycznie 'd' od ASP.NET AJAX
+        periods = data1["d"]["ListData"]
+
+        # wybierz rekord dla obecnego miesiąca/roku
         today = datetime.date.today()
         month = today.month
         year = today.year
-        for period in periods:
-            if period['Rok'] == year and period["Miesiac"] == month:
-                amounts_summary = period
+        amounts_summary = next(
+            (p for p in periods if int(p.get("Rok", 0)) == year and int(p.get("Miesiac", 0)) == month),
+            None
+        )
         if amounts_summary is None:
-            raise ValueError()
+            # fallback: weź najnowszy dostępny okres (gdy brak bieżącego)
+            amounts_summary = max(
+                periods, key=lambda p: (int(p.get("Rok", 0)), int(p.get("Miesiac", 0)))
+            )
+
         summary_to_pay = amounts_summary["DoZaplaty"]
         summary_paid = amounts_summary["Zaplacono"]
         summary_overdue = amounts_summary["Zaleglosc"]
         summary_overpayment = amounts_summary["Nadplata"]
 
-        strings = f'{{"idDziecko": "{self.child_master_id}"}} '
+        # --- 2) Szczegóły opłat (stała/posiłki/dodatkowe) ---
+        payload_details = {"idDziecko": str(self.child_master_id)}  # ten endpoint nie używa 'args'
+        r2 = self.session.post(
+            self.URL_BASE + self.URL_RECEIVABLES_DATA,
+            data=json.dumps(payload_details),
+            headers=headers,
+            timeout=20,
+        )
+        r2.raise_for_status()
+        data2 = r2.json()
+        receivables = data2["d"]["ListK"]
 
-        request2 = urllib.request.Request(
-            self.URL_BASE + self.URL_RECEIVABLES_DATA)
-        request2.data = strings.encode('utf-8')
-        request2.add_header('Content-Type', 'application/json; charset=utf-8')
-        result2 = self.opener.open(request2).read()
+        costs_fixed = 0.0
+        costs_meal = 0.0
+        costs_additional = 0.0
 
-        result2 = json.loads(result2)
-
-        receivables = result2["d"]["ListK"]
-
-        costs_fixed = 0
-        costs_meal = 0
-        costs_additional = 0
-
-        for receivable in receivables:
-            if receivable["RodzajOplaty"] == 0:
-                costs_fixed = receivable["Kwota"]
-            elif receivable["RodzajOplaty"] == 1:
-                costs_additional = receivable["Kwota"]
-            elif receivable["RodzajOplaty"] == 2:
-                costs_meal = receivable["Kwota"]
+        for rec in receivables:
+            kind = rec.get("RodzajOplaty")
+            if kind == 0:
+                costs_fixed = rec["Kwota"]
+            elif kind == 1:
+                costs_additional = rec["Kwota"]
+            elif kind == 2:
+                costs_meal = rec["Kwota"]
 
         return Receivables(
             summary_to_pay=summary_to_pay,
@@ -176,4 +191,5 @@ class Iprzedszkole(Client):
             summary_overpayment=summary_overpayment,
             costs_fixed=costs_fixed,
             costs_meal=costs_meal,
-            costs_additional=costs_additional)
+            costs_additional=costs_additional,
+        )
