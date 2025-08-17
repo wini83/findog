@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+
 import numpy as np
 
 
@@ -6,9 +7,9 @@ class Payment:
     amount: float
     paid: bool
     excel_row: int
-    due_date: datetime.date
+    due_date: datetime
 
-    def __init__(self, paid=False, due_date=datetime.datetime.now(), amount=0.0, excel_row=0):
+    def __init__(self, paid=False, due_date=datetime.now(), amount=0.0, excel_row=0):
         self.due_date = due_date
         self.amount: float = amount
         self.paid: bool = paid
@@ -26,7 +27,7 @@ class Payment:
 
     @property
     def payable_within_2days(self) -> bool:
-        today = datetime.datetime.now()
+        today = datetime.now()
         delta = self.due_date - today
         if not self.paid:
             if delta.days <= 2:
@@ -37,7 +38,7 @@ class Payment:
 
     @property
     def overdue(self) -> bool:
-        today = datetime.datetime.now()
+        today = datetime.now()
         delta = self.due_date - today
         if delta.total_seconds() < 0 and not self.paid:
             return True
@@ -46,5 +47,5 @@ class Payment:
 
     @property
     def b_days_left(self) -> int:
-        today = datetime.datetime.now()
-        return np.busday_count(f'{today:%Y-%m-%d}', f'{self.due_date:%Y-%m-%d}')
+        today = datetime.now()
+        return int(np.busday_count(f'{today:%Y-%m-%d}', f'{self.due_date:%Y-%m-%d}'))
