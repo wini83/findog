@@ -92,6 +92,8 @@ class Iprzedszkole(Client):
         form_parameters = {'__VIEWSTATE': view_state,
                            '__VIEWSTATEGENERATOR': view_state_generator,
                            '__EVENTVALIDATION': event_validation,
+                           "__EVENTTARGET": '',
+                           "__EVENTARGUMENT": '',
                            'ctl00$cphContent$txtDatabase': self.kindergartenName,
                            'ctl00$cphContent$txtLogin': self.kindergartenLogin,
                            'ctl00$cphContent$txtPassword': self.kindergartenPassword,
@@ -103,7 +105,7 @@ class Iprzedszkole(Client):
         request = urllib.request.Request(self.URL_BASE + self.URL_LOGIN)
         request.data = form_data.encode('utf-8')
         request.add_header('User-Agent', self.userAgent)
-        self.opener.open(request)
+        login_result = self.opener.open(request).read().decode('utf-8')
 
         request = urllib.request.Request(self.URL_BASE + self.URL_MEAL_PLAN)
         request.add_header('User-Agent', self.userAgent)
