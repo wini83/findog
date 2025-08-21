@@ -3,8 +3,7 @@ from datetime import date, datetime
 from io import BytesIO
 from typing import Dict, List
 
-from openpyxl import Workbook
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell
 
 from payment_list_item import PaymentListItem

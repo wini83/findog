@@ -103,7 +103,7 @@ class Iprzedszkole(Client):
         r3 = self.session.get(self.URL_BASE + self.URL_MEAL_PLAN, timeout=20)
 
 
-        child_master_id = re.search('<option\s+selected="selected"\s+value="(\d+)">', r3.text)
+        child_master_id = re.search(r'<option\s+selected="selected"\s+value="(\d+)">', r3.text)
         self.child_master_id = child_master_id.group(1)
         self.logged_in = True
 

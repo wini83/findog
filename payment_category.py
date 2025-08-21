@@ -1,5 +1,6 @@
-from payment import Payment
 from typing import Dict
+
+from payment import Payment
 
 
 class PaymentCategory:

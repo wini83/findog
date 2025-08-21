@@ -1,47 +1,32 @@
-from typing import Any, List
+import os
 
+from typing import List
 from api_clients.dropbox_client import DropboxClient
 from payment_book import PaymentBook
 from pushover import Pushover
-import config
-import os
-
+from settings import Settings
 
 class HandlerContext:
-    dropbox_client: DropboxClient
-    payment_book: PaymentBook
-    file_object: bytes
-    pushover: Pushover
-    excel_file_path: str
-    ekartoteka_credentials: Any
-    ekartoteka_sheet: Any
-    enea_credentials: Any
-    silent: bool
-    recipients: List[str]
-    gmail_user: str
-    gmail_pass: str
-    statuses: List[str]
-    no_excel: bool
-
-    def __init__(self, silent: bool = False):
-        self.dropbox_client = DropboxClient(config.api_key)
-        self.pushover = Pushover(config.pushover_apikey, config.pushover_user)
-        self.payment_book = PaymentBook(config.monitored_sheets)
-        self.excel_file_path = config.excel_file_path
-        self.ekartoteka_credentials = config.ekartoteka
-        self.iprzedszkole_credentials = config.przedszkole
-        self.ekartoteka_sheet = config.ekartoteka_sheet
-        self.enea_credentials = config.enea
-        self.iprzedszkole_sheet = config.przedszkole_sheet
-        self.enea_sheet = config.enea_sheet
+    def __init__(self, settings: Settings, silent: bool = False):
+        self.dropbox_client = DropboxClient(settings.dropbox_apikey)
+        self.pushover = Pushover(settings.pushover_apikey, settings.pushover_user)
+        self.payment_book = PaymentBook(settings.monitored_sheets)
+        self.excel_dropbox_path = settings.excel_dropbox_path
+        self.excel_local_path = str(settings.excel_local_path)
+        self.ekartoteka_credentials = settings.ekartoteka.model_dump()
+        self.iprzedszkole_credentials = settings.przedszkole.model_dump()
+        self.ekartoteka_sheet = settings.ekartoteka_sheet
+        self.enea_credentials = settings.enea.model_dump()
+        self.iprzedszkole_sheet = settings.przedszkole_sheet
+        self.enea_sheet = settings.enea_sheet
         self.silent = silent
-        self.recipients = config.recipients
-        self.gmail_user = config.gmail_user
-        self.gmail_pass = config.gmail_pass
-        self.statuses = []
-        self.nju_credentials = config.nju_credentials
+        self.recipients = settings.recipients
+        self.gmail_user = settings.gmail_user
+        self.gmail_pass = settings.gmail_pass or ""
+        self.statuses: List[str] = []
+        self.nju_credentials = [c.model_dump() for c in settings.nju_credentials]
         self.no_excel = False
 
     @property
     def excel_file_name(self):
-        return os.path.basename(self.excel_file_path)
+        return os.path.basename(self.excel_local_path)

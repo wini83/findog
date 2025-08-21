@@ -221,7 +221,11 @@ play.xlsx
 output_mail.html
 output.html
 output.png
-config.py
+config/config.py
 
 settings.py
 /nju_html.html
+/data/
+/config/config.yaml
+/secrets/
+/docker-compose.yml

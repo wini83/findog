@@ -1,4 +1,6 @@
-from os import chdir, path
+import os
+import sys
+from pathlib import Path
 
 import click
 from loguru import logger
@@ -7,22 +9,38 @@ from handlers.analyticshandler import AnalyticsHandler
 from handlers.context import HandlerContext
 from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
+from handlers.filehandlers import (FileCommitHandler, FileDownloadHandler,
+                                   FileProcessHandler, NotifyOngoingHandler,
+                                   SaveFileLocallyHandler)
 from handlers.handler import Handler
-from handlers.njuhandler import NjuHandler
-from handlers.filehandlers import FileDownloadHandler, FileProcessHandler, NotifyOngoingHandler, SaveFileLocallyHandler, \
-    FileCommitHandler
 from handlers.iprzedszkolehandler import IPrzedszkoleHandler
 from handlers.mailinghandler import MailingHandler
+from handlers.njuhandler import NjuHandler
+from settings import Settings
 
 API_EKARTOTEKA = "ekartoteka"
 API_IPRZEDSZKOLE = "iprzedszkole"
 API_ENEA = "enea"
 API_NJU = "nju"
 
-chdir(path.dirname(path.abspath(__file__)))
+DATA_DIR = Path(os.getenv("DATA_DIR", "/data"))
+LOG_DIR = DATA_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-logger.add("./logs/findog.log", rotation="1 week")
 
+logger.remove()
+
+
+logger.add(
+    LOG_DIR / "findog.log",
+    rotation="1 week",
+    retention="14 days",
+    enqueue=True,
+    backtrace=False,
+    diagnose=False
+)
+
+logger.add(sys.stdout, level="INFO")
 
 def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler):
     if current_handler is None:
@@ -30,6 +48,9 @@ def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler
     else:
         return current_handler.set_next(new_handler), starter
 
+
+def load_settings()->Settings:
+    return Settings.from_all()
 
 @click.command(no_args_is_help=True)
 @click.option("--enable-all", is_flag=True, help="Carry out the full process", default=False, )
@@ -67,7 +88,8 @@ A simple program to keep your payments in check
         enable_api_all = True
     if enable_api_all:
         enable_api = (API_EKARTOTEKA, API_IPRZEDSZKOLE, API_ENEA, API_NJU)
-    ctx = HandlerContext(silent=not enable_notification)
+    settings = load_settings()
+    ctx = HandlerContext(silent=not enable_notification, settings=settings)
     notifier = NotifyOngoingHandler()
     mailer = MailingHandler()
     mailer.run_dry = not enable_notification
@@ -99,10 +121,10 @@ A simple program to keep your payments in check
     if enable_dropbox:
         if enable_notification:
             handler = handler.set_next(notifier)
+            handler = handler.set_next(mailer)
         if enable_analytics:
             anal = AnalyticsHandler()
             handler = handler.set_next(anal)
-        handler = handler.set_next(mailer)
         handler = handler.set_next(SaveFileLocallyHandler())
         if not disable_commit:
             handler.set_next(FileCommitHandler())
