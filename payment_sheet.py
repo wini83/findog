@@ -1,17 +1,15 @@
-import string
 import calendar
+import string
+from copy import copy
 from datetime import datetime, timedelta
+from typing import Dict, List
 
 from openpyxl.cell import Cell
-from openpyxl.styles import PatternFill, Color
+from openpyxl.styles import Color, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
 from payment import Payment
 from payment_category import PaymentCategory
-
-from typing import List, Dict
-
-from copy import copy
 
 RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
 GREEN_FILL = PatternFill(fill_type='solid', start_color="92D050")

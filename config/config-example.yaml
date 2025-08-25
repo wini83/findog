@@ -1,0 +1,24 @@
+api_key: "CHANGE_ME"
+
+excel_file_path: "/data/Oplaty.xlsm"   # domyślnie do /data (wolumen)
+
+monitored_sheets:
+  Main:   ["C","I","O","R","U","X","AD","AG","AJ","AM","AP"]
+  Mama :  ["C","I"]
+  Podatek NN: ["C","F"]
+
+ekartoteka:      { username: "user@server.com" }
+enea:            { username: "user@server.com" }
+przedszkole:     { kindergarten: "p_city", username: "rodzic_1234567" }
+
+ekartoteka_sheet: ["General", "Mieszkanie czynsz"]
+przedszkole_sheet: ["General", "Placówka Mati"]
+enea_sheet:        ["General", "Prąd Enea"]
+
+gmail_user: "noreply@server.com"
+
+recipients: ["user1@server.com","user2@server.com"]
+
+nju_credentials:
+  - { phone: "601200300", sheet: "Greg",   cat: "Telefon a" }
+  - { phone: "602200300", sheet: "Joanna", cat: "Telefon b" }

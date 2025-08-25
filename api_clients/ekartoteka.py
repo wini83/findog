@@ -2,7 +2,6 @@ import codecs
 import json
 from base64 import b64decode
 from datetime import datetime
-
 from json import JSONDecodeError
 from typing import NamedTuple
 from urllib import request

@@ -1,0 +1,35 @@
+services:
+  findog:
+    build: .
+    environment:
+      - CONFIG_PATH=/config/config.yaml
+      - DATA_DIR=/data
+      # przykładowe nadpisanie pojedynczej wartości:
+      # - E_KARTOTEKA__USERNAME=inna_nazwa
+    volumes:
+      - ./config:/config:ro
+      - ./data:/data
+    secrets:
+      - dropbox_apikey
+      - pushover_apikey
+      - pushover_user
+      - ekartoteka_password
+      - enea_password
+      - przedszkole_password
+      - gmail_password
+      - nju_781935566_password
+      - nju_662300097_password
+    command: ["python","main.py","--enable-all"]
+
+secrets:
+  dropbox_apikey:       { file: ./secrets/dropbox_apikey }
+  pushover_apikey:       { file: ./secrets/pushover_apikey }
+  pushover_user:         { file: ./secrets/pushover_user }
+  ekartoteka_password:   { file: ./secrets/ekartoteka_password }
+  enea_password:         { file: ./secrets/enea_password }
+  przedszkole_password:  { file: ./secrets/przedszkole_password }
+  gmail_password:        { file: ./secrets/gmail_password }
+  nju_60100001_password:
+    file: ./secrets/nju_501000001_password
+  nju_50100002_password:
+    file: ./secrets/nju_50100002_password

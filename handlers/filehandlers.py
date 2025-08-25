@@ -13,7 +13,7 @@ class FileDownloadHandler(AbstractHandler):
         logger.info("Downloading File...")
         if context is not None:
             try:
-                context.file_object = context.dropbox_client.retrieve_file(context.excel_file_path)
+                context.file_object = context.dropbox_client.retrieve_file(context.excel_dropbox_path)
                 logger.info(f"File {context.excel_file_name} downloaded")
                 return super().handle(context)
             except Exception:
@@ -69,7 +69,7 @@ class NotifyOngoingHandler(AbstractHandler):
 class SaveFileLocallyHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Saving file locally")
-        context.payment_book.save_to_file(filename=context.excel_file_name)
+        context.payment_book.save_to_file(filename=context.excel_local_path)
         logger.info(f"File: {context.excel_file_name} saved")
         return super().handle(context)
 
@@ -80,7 +80,7 @@ class SaveFileLocallyHandler(AbstractHandler):
 class FileCommitHandler(AbstractHandler):
     def handle(self, context: HandlerContext) -> HandlerContext:
         logger.info("Committing file")
-        context.dropbox_client.commit_file(context.excel_file_name, context.excel_file_path)
+        context.dropbox_client.commit_file(context.excel_local_path, context.excel_dropbox_path)
         logger.info(f"file: {context.excel_file_name} committed")
         return super().handle(context)
 

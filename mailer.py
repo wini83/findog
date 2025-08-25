@@ -1,14 +1,14 @@
 import datetime
+from math import floor
 from typing import List
 
+from loguru import logger
+
+import payment_book as pb
 from api_clients.client import Client
 from gmail_adapter import GmailAdapter
 from messages import DailyMessage
 from payment_book import PaymentBook
-import payment_book as pb
-from loguru import logger
-from math import floor
-
 from payment_list_item import PaymentListItem
 
 

@@ -1,7 +1,7 @@
 from loguru import logger
 
-from handlers.context import HandlerContext
 from api_clients.ekartoteka import Ekartoteka
+from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
 
 

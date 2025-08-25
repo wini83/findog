@@ -24,7 +24,7 @@ class MailingHandler(AbstractHandler):
                     logger.info(f"mail to {recipient} send")
                 logger.info("sending mail completed")
             else:
-                with open("output_mail.html", "wb") as html_file:
+                with open("/data/output_mail.html", "wb") as html_file:
                     html_file.write(payload.encode('utf-8'))
         except Exception as e:
             logger.exception("Problem with Mailer", exc_info=e)

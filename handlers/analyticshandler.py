@@ -2,15 +2,14 @@ import datetime
 import os
 import shutil
 
+import matplotlib.pyplot as plt
+import pandas as pd
 from loguru import logger
+from matplotlib import rcParams
 
 import anaytics
 from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
-import pandas as pd
-
-import matplotlib.pyplot as plt
-from matplotlib import rcParams
 
 rcParams['axes.spines.top'] = False
 rcParams['axes.spines.right'] = False
@@ -77,7 +76,7 @@ class AnalyticsHandler(AbstractHandler):
                                  #labeldistance=None,
                                  legend=True)
                 ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
-                plt.savefig("output.png", dpi=300, bbox_inches='tight', pad_inches=0)
+                plt.savefig("/data/output.png", dpi=300, bbox_inches='tight', pad_inches=0)
                 logger.info("Analytics completed")
         except Exception as e:
             logger.exception("Problem with Analytics", exc_info=e)
