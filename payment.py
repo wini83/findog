@@ -1,6 +1,6 @@
 """Payment model and related helpers."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -43,14 +43,14 @@ class Payment:
         """
         today = datetime.now()
         delta = self.due_date - today
-        return (not self.paid) and (delta.days <= 2)
+        return (not self.paid) and (delta <= timedelta(days=2))
 
     @property
     def due_soon_or_overdue(self) -> bool:
         """Alias for readability; same semantics as `payable_within_2days`."""
         today = datetime.now()
         delta = self.due_date - today
-        return (not self.paid) and (delta.days <= 2)
+        return (not self.paid) and (delta <= timedelta(days=2))
 
     @property
     def overdue(self) -> bool:

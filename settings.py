@@ -90,9 +90,17 @@ class Settings(BaseSettings):
 
         # Walidacje lekkie
         if not s.dropbox_apikey:
+            # Validation should not crash module import. Keep the
+            # strict check at call sites (e.g., app startup) rather
+            # than at import time to allow tests to import modules
+            # without configured secrets.
             raise ValueError("Brak api_key (ustaw w config.yaml lub ENV)")
         if not s.gmail_user:
             raise ValueError("Brak gmail_user")
         return s
 
-settings = Settings.from_all()
+# Note:
+# Do not eagerly instantiate Settings at import time. Importers like test
+# modules may only need the class definition and not a fully configured
+# instance, and eager instantiation could raise due to missing secrets.
+# Callers should explicitly construct settings via Settings.from_all().

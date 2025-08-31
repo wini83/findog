@@ -11,8 +11,9 @@ from loguru import logger
 # noinspection SpellCheckingInspection
 PAID = "zapłacona"
 USER_AGENT = (
-    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 '
-    'Safari/537.36 '
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) '
+    'AppleWebKit/537.36 (KHTML, like Gecko) '
+    'Chrome/45.0.2454.85 Safari/537.36 '
 )
 LOGIN_URL = "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury"
 POST_URL = "https://www.njumobile.pl/logowanie?_DARGS=/profile-processes/login/login.jsp.portal-login-form"
@@ -119,16 +120,16 @@ class NjuInvoice:
 
 
 class DataClassUnpack:
-    classFieldCache = {}
+    class_field_cache = {}
 
     @classmethod
     def instantiate(cls, class_2_instantiate, arg_dict):
-        if class_2_instantiate not in cls.classFieldCache:
-            cls.classFieldCache[class_2_instantiate] = {
+        if class_2_instantiate not in cls.class_field_cache:
+            cls.class_field_cache[class_2_instantiate] = {
                 f.name for f in fields(class_2_instantiate) if f.init
             }
 
-        field_set = cls.classFieldCache[class_2_instantiate]
+        field_set = cls.class_field_cache[class_2_instantiate]
         filtered_arg_dict = {k: v for k, v in arg_dict.items() if k in field_set}
         return class_2_instantiate(**filtered_arg_dict)
 
@@ -153,7 +154,10 @@ def print_summary(table: List[NjuInvoice], text_if_none: str = "") -> str:
         for invoice in table:
             ids += f'{invoice.doc_id};'
             total += invoice.total()
-        result += f"invoice numbers: {ids}; total {total:.2f} PLN; due date: {table[0].due_date}"
+        result += (
+            f"invoice numbers: {ids}; total {total:.2f} PLN; "
+            f"due date: {table[0].due_date}"
+        )
     else:
         result += text_if_none
     return result
@@ -188,9 +192,13 @@ class Nju:
             payload = {
                 "_dyncharset": "UTF-8",
                 "_dynSessConf": authenticity_token,
-                "/ptk/sun/login/formhandler/LoginFormHandler.backUrl": "/mojekonto/faktury",
+                "/ptk/sun/login/formhandler/"
+                "LoginFormHandler.backUrl": (
+                    "/mojekonto/faktury"
+                ),
                 "_D:/ptk/sun/login/formhandler/LoginFormHandler.backUrl": "+",
-                "/ptk/sun/login/formhandler/LoginFormHandler.hashMsisdn": "",
+                "/ptk/sun/login/formhandler/"
+                "LoginFormHandler.hashMsisdn": "",
                 "_D:/ptk/sun/login/formhandler/LoginFormHandler.hashMsisdn": "+",
                 "phone-input": self.phone_nmb,
                 "_D:phone-input": "+",
@@ -198,7 +206,9 @@ class Nju:
                 "_D:password-form": "+",
                 "login-submit": "zaloguj+się",
                 "_D:login-submit": "+",
-                "_DARGS": "/profile-processes/login/login.jsp.portal-login-form",
+                "_DARGS": (
+                    "/profile-processes/login/login.jsp.portal-login-form"
+                ),
             }
 
             form_data = urllib.parse.urlencode(payload)

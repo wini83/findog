@@ -74,7 +74,6 @@ class AnalyticsHandler(AbstractHandler):
                 # row.to_html("output.html")
                 # plt.figure(figsize=(12, 4))
                 # vector = row.iloc[0]
-                colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
                 vector = row.transpose()
                 vector.to_html("output.html")
                 ax = vector.plot(

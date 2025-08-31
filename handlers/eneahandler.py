@@ -25,12 +25,14 @@ class EneaHandler(AbstractHandler):
             enea_str = (
                 f'ENEA: '
                 f'Last invoice issue date: {enea_results.last_invoice_date:%Y-%m-%d}; '
-                f'Last invoice due date: {enea_results.last_invoice_due_date:%Y-%m-%d}; '
-                f'Last invoice amount PLN: {enea_results.last_invoice_amount_PLN:.2f}; '
+                f'Last invoice due date: '
+                f'{enea_results.last_invoice_due_date:%Y-%m-%d}; '
+                f'Last invoice amount PLN: '
+                f'{enea_results.last_invoice_amount_pln:.2f}; '
                 f'Last invoice unpaid PLN: {enea_results.last_invoice_unpaid_pln:.2f}; '
                 f'Last invoice status: {enea_results.last_invoice_status}; '
                 f'Last readout date: {enea_results.last_readout_date:%Y-%m-%d};'
-                f'Last readout value kWh: {enea_results.last_readout_amount_kWh:.2f}'
+                f'Last readout value kWh: {enea_results.last_readout_amount_kwh:.2f}'
             )
 
             if enea_results.last_invoice_unpaid_pln > 0:
@@ -46,7 +48,7 @@ class EneaHandler(AbstractHandler):
                     context.payment_book.update_current_payment(
                         sheet_name=context.enea_sheet[0],
                         category_name=context.enea_sheet[1],
-                        amount=enea_results.last_invoice_amount_PLN,
+                        amount=enea_results.last_invoice_amount_pln,
                         paid=paid,
                         due_date=enea_results.last_invoice_due_date,
                     )

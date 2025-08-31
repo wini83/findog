@@ -44,10 +44,10 @@ class EneaResults:
 
     last_invoice_date: datetime
     last_invoice_due_date: datetime
-    last_invoice_amount_PLN: float
+    last_invoice_amount_pln: float
     last_invoice_unpaid_pln: float
     last_invoice_status: str
-    last_readout_amount_kWh: float
+    last_readout_amount_kwh: float
     last_readout_date: datetime
 
     def __init__(
@@ -57,15 +57,15 @@ class EneaResults:
         last_invoice_amount_pln: float,
         last_invoice_unpaid_pln: float,
         last_invoice_status: str,
-        last_readout_amount_kWh: float,
+        last_readout_amount_kwh: float,
         last_readout_date: datetime,
     ):
         self.last_invoice_date = last_invoice_date
         self.last_invoice_due_date = last_invoice_due_date
-        self.last_invoice_amount_PLN = last_invoice_amount_pln
+        self.last_invoice_amount_pln = last_invoice_amount_pln
         self.last_invoice_unpaid_pln = last_invoice_unpaid_pln
         self.last_invoice_status = last_invoice_status
-        self.last_readout_amount_kWh = last_readout_amount_kWh
+        self.last_readout_amount_kwh = last_readout_amount_kwh
         self.last_readout_date = last_readout_date
 
 
@@ -141,8 +141,9 @@ class Enea(Client):
 
     URL_BASE = 'https://ebok.enea.pl'
     USER_AGENT = (
-        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 '
-        'Safari/537.36 '
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/45.0.2454.85 Safari/537.36 '
     )
     URL_LOGIN = "/logowanie"
     URL_INVOICES = "/invoices/invoice-history"
@@ -214,6 +215,6 @@ class Enea(Client):
             last_invoice_amount_pln=value,
             last_invoice_unpaid_pln=unpaid,
             last_invoice_status=status,
-            last_readout_amount_kWh=readout_value,
+            last_readout_amount_kwh=readout_value,
             last_readout_date=readout_date,
         )
