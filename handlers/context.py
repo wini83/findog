@@ -1,13 +1,19 @@
-import os
+"""Execution context passed between handlers in the pipeline."""
 
+import os
 from typing import List
+
 from api_clients.dropbox_client import DropboxClient
 from payment_book import PaymentBook
 from pushover import Pushover
 from settings import Settings
 
+
 class HandlerContext:
+    """Holds shared services, settings and runtime data for handlers."""
+
     def __init__(self, settings: Settings, silent: bool = False):
+        """Create a context initialized from given Settings object."""
         self.dropbox_client = DropboxClient(settings.dropbox_apikey)
         self.pushover = Pushover(settings.pushover_apikey, settings.pushover_user)
         self.payment_book = PaymentBook(settings.monitored_sheets)
@@ -29,4 +35,5 @@ class HandlerContext:
 
     @property
     def excel_file_name(self):
+        """Return just the Excel filename from the local path."""
         return os.path.basename(self.excel_local_path)

@@ -1,3 +1,5 @@
+"""Handler responsible for rendering and sending email reports."""
+
 from loguru import logger
 
 from handlers.context import HandlerContext
@@ -6,12 +8,16 @@ from mailer import Mailer
 
 
 class MailingHandler(AbstractHandler):
+    """Uses Mailer to produce HTML and send it to recipients."""
+
     run_dry: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Render report HTML and optionally send emails."""
 
         mailer = Mailer(context.gmail_user, context.gmail_pass, context.payment_book)
         mailer.statuses = context.statuses
+        # noinspection PyBroadException
         try:
             mailer.login()
             logger.info("Rendering message")
@@ -26,8 +32,8 @@ class MailingHandler(AbstractHandler):
             else:
                 with open("/data/output_mail.html", "wb") as html_file:
                     html_file.write(payload.encode('utf-8'))
-        except Exception as e:
-            logger.exception("Problem with Mailer", exc_info=e)
+        except Exception:  # pylint: disable=broad-except #edge of system
+            logger.exception("Problem with Mailer")
             context.pushover.error("Problem with mailer")
         return super().handle(context)
 

@@ -1,3 +1,5 @@
+"""Base handler interfaces for processing pipeline (Chain of Responsibility)."""
+
 from abc import ABC, abstractmethod
 
 from loguru import logger
@@ -13,10 +15,12 @@ class Handler(ABC):
 
     @abstractmethod
     def set_next(self, handler):
+        """Set the next handler in the chain and return it."""
         pass
 
     @abstractmethod
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Process the context or delegate to the next handler."""
         pass
 
 
@@ -33,11 +37,12 @@ class AbstractHandler(Handler):
         # Returning a handler from here will let us link handlers in a
         # convenient way like this:
         # monkey.set_next(squirrel).set_next(dog)
-        logger.info(f'Handler: {self.__str__()} - next handler is {handler.__str__()}')
+        logger.info(f'Handler: {self} - next handler is {handler}')
         return handler
 
     @abstractmethod
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Call next handler if present and return the resulting context."""
         if self._next_handler:
             return self._next_handler.handle(context)
         return context

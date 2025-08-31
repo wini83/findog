@@ -1,0 +1,37 @@
+[project]
+name = "findog"
+version = "0.6.0"
+description = "A simple program to keep your payments in check"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.6.0"
+tag_format = "v$version"
+version_files = ["pyproject.toml"]
+update_changelog_on_bump = true
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+lint.select = ["E", "F", "I", "N"]
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]

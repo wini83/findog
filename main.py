@@ -9,9 +9,13 @@ from handlers.analyticshandler import AnalyticsHandler
 from handlers.context import HandlerContext
 from handlers.ekartotekahandler import EkartotekaHandler
 from handlers.eneahandler import EneaHandler
-from handlers.filehandlers import (FileCommitHandler, FileDownloadHandler,
-                                   FileProcessHandler, NotifyOngoingHandler,
-                                   SaveFileLocallyHandler)
+from handlers.filehandlers import (
+    FileCommitHandler,
+    FileDownloadHandler,
+    FileProcessHandler,
+    NotifyOngoingHandler,
+    SaveFileLocallyHandler,
+)
 from handlers.handler import Handler
 from handlers.iprzedszkolehandler import IPrzedszkoleHandler
 from handlers.mailinghandler import MailingHandler
@@ -37,10 +41,11 @@ logger.add(
     retention="14 days",
     enqueue=True,
     backtrace=False,
-    diagnose=False
+    diagnose=False,
 )
 
 logger.add(sys.stdout, level="INFO")
+
 
 def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler):
     if current_handler is None:
@@ -49,37 +54,73 @@ def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler
         return current_handler.set_next(new_handler), starter
 
 
-def load_settings()->Settings:
+def load_settings() -> Settings:
     return Settings.from_all()
 
+
 @click.command(no_args_is_help=True)
-@click.option("--enable-all", is_flag=True, help="Carry out the full process", default=False, )
-@click.option("--enable-dropbox", is_flag=True, help="Run with processing excel file, ignored with '--enable-all'",
-              default=False)
-@click.option("--enable-notification", is_flag=True, help="Run with notifications,ignored with '--enable-all'",
-              default=False)
-@click.option("--enable-api-all", is_flag=True, help="Run with all API clients, ignored with '--enable-all'",
-              default=False)
-@click.option("--enable-analytics", is_flag=True, help="Run with Analytics module, ignored with '--enable-all'",
-              default=False)
-@click.option("--enable-api", help="Enable specific api, ignored with '--enable-all'", multiple=True)
-@click.option("--disable-commit", is_flag=True, help="Run without committing file to dropbox", default=False)
-def main(enable_all,
-         enable_dropbox,
-         enable_notification,
-         enable_api_all,
-         enable_api,
-         enable_analytics,
-         disable_commit
-         ):
+@click.option(
+    "--enable-all",
+    is_flag=True,
+    help="Carry out the full process",
+    default=False,
+)
+@click.option(
+    "--enable-dropbox",
+    is_flag=True,
+    help="Run with processing excel file, ignored with '--enable-all'",
+    default=False,
+)
+@click.option(
+    "--enable-notification",
+    is_flag=True,
+    help="Run with notifications,ignored with '--enable-all'",
+    default=False,
+)
+@click.option(
+    "--enable-api-all",
+    is_flag=True,
+    help="Run with all API clients, ignored with '--enable-all'",
+    default=False,
+)
+@click.option(
+    "--enable-analytics",
+    is_flag=True,
+    help="Run with Analytics module, ignored with '--enable-all'",
+    default=False,
+)
+@click.option(
+    "--enable-api",
+    help="Enable specific api, ignored with '--enable-all'",
+    multiple=True,
+)
+@click.option(
+    "--disable-commit",
+    is_flag=True,
+    help="Run without committing file to dropbox",
+    default=False,
+)
+def main(
+    enable_all,
+    enable_dropbox,
+    enable_notification,
+    enable_api_all,
+    enable_api,
+    enable_analytics,
+    disable_commit,
+):
     """
-A simple program to keep your payments in check
+    A simple program to keep your payments in check
     """
-    click.echo(click.style('Findog - simple program to keep your payments in check',
-                           fg='black',
-                           bold=True,
-                           bg="yellow",
-                           blink=True))
+    click.echo(
+        click.style(
+            'Findog - simple program to keep your payments in check',
+            fg='black',
+            bold=True,
+            bg="yellow",
+            blink=True,
+        )
+    )
     click.echo(f'{"=" * 60}')
     logger.info("Findog - simple program to keep your payments in check")
     if enable_all:
@@ -134,4 +175,5 @@ A simple program to keep your payments in check
 
 
 if __name__ == '__main__':
-    main()
+    # click injects parameters at runtime; disable pylint's static check here
+    main()  # pylint: disable=no-value-for-parameter

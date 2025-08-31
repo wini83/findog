@@ -1,3 +1,5 @@
+"""Handler integrating with iPrzedszkole service and updating payments."""
+
 from datetime import datetime
 
 from loguru import logger
@@ -8,14 +10,17 @@ from iprzedszkole import Iprzedszkole, Receivables
 
 
 class IPrzedszkoleHandler(AbstractHandler):
+    """Fetch receivables from iPrzedszkole and reflect them in the sheet."""
 
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Pull latest data and update payment book; append status message."""
         logger.info("iPrzedszkole")
         try:
             iprzedszkole = Iprzedszkole(
                 context.iprzedszkole_credentials["kindergarten"],
                 context.iprzedszkole_credentials["username"],
-                context.iprzedszkole_credentials["password"])
+                context.iprzedszkole_credentials["password"],
+            )
             iprzedszkole.login()
             result: Receivables = iprzedszkole.get_receivables()
             if result.summary_overdue > 0:
@@ -33,11 +38,16 @@ class IPrzedszkoleHandler(AbstractHandler):
                     category_name=context.iprzedszkole_sheet[1],
                     amount=result.summary_to_pay,
                     paid=paid,
-                    force_unpaid=force_unpaid)
-            iprzedszkole_str = \
-                f'iPRZEDSZKOLE: fixed costs: PLN {result.costs_fixed:.2f};meal costs: {result.costs_meal:.2f} PLN, ' \
-                f'Overdue: PLN {result.summary_overdue:.2f}, ' \
-                f'overpaid:PLN {result.summary_overpayment:.2f}, to pay {result.summary_to_pay:.2f}'
+                    force_unpaid=force_unpaid,
+                )
+            iprzedszkole_str = (
+                'iPRZEDSZKOLE: '
+                f'fixed costs: PLN {result.costs_fixed:.2f}; '
+                f'meal costs: {result.costs_meal:.2f} PLN, '
+                f'Overdue: PLN {result.summary_overdue:.2f}, '
+                f'overpaid: PLN {result.summary_overpayment:.2f}, '
+                f'to pay {result.summary_to_pay:.2f}'
+            )
             logger.info(iprzedszkole_str)
             context.statuses.append(iprzedszkole_str)
         except Exception as e:

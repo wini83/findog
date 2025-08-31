@@ -1,3 +1,5 @@
+"""REST client for e-kartoteka API used to fetch monthly fees."""
+
 import codecs
 import json
 from base64 import b64decode
@@ -11,17 +13,21 @@ from api_clients.client import Client, NotInitializedError
 
 
 def seconds_from_epoch() -> int:
-    from_epoch = datetime.now().timestamp().__floor__()
+    """Return integer seconds since Unix epoch."""
+    from_epoch = datetime.now().timestamp().floor()
     return int(from_epoch)
 
 
 def parse_date(string_input):
+    """Parse ISO-like date string into datetime."""
     shorted = string_input[0:10]
     result = datetime.strptime(shorted, "%Y-%m-%d")
     return result
 
 
 class EkartotekaResult(NamedTuple):
+    """Container for apartment fee and settlement summary."""
+
     apartment_fee: float
     delta: float
     paid: bool
@@ -30,12 +36,20 @@ class EkartotekaResult(NamedTuple):
 
 
 class Ekartoteka(Client):
-    URL_SETTLEMENTS = "https://e-kartoteka.pl/api/rozrachunki/konta/?id_a_do={}&id_kli={}&rok={}"
+    """Client that authenticates with token and fetches fee data."""
+
+    URL_SETTLEMENTS = (
+        "https://e-kartoteka.pl/api/rozrachunki/konta/?id_a_do={}&id_kli={}&rok={}"
+    )
     URL_TOKEN = "https://e-kartoteka.pl/api/api-token-auth/"
     URL_ME = "https://e-kartoteka.pl/api/uzytkownicy/uzytkownicy/me/"
-    URL_PREMISES = "https://e-kartoteka.pl/api/oplatymiesieczne/lokale/?id_a_do={}&id_kli={}"
-    URL_MONTHLY_FEES_SUM = "https://e-kartoteka.pl/api/oplatymiesieczne/oplatymiesiecznenalokale/suma/?id_a_do={" \
-                           "}&id_kli={} "
+    URL_PREMISES = (
+        "https://e-kartoteka.pl/api/oplatymiesieczne/lokale/?id_a_do={}&id_kli={}"
+    )
+    URL_MONTHLY_FEES_SUM = (
+        "https://e-kartoteka.pl/api/oplatymiesieczne/oplatymiesiecznenalokale/suma/?id_a_do={"
+        "}&id_kli={} "
+    )
     URL_UPDATE_DATES = "https://e-kartoteka.pl/api/uzytkownicy/datyaktualizacji/?id_a_do={}&id_kli={}&pageSize=50"
     token: str
     _credentials = None
@@ -46,10 +60,12 @@ class Ekartoteka(Client):
     token_expire: int
 
     def __init__(self, credentials):
+        """Store credentials dict as provided by settings."""
         self._credentials = credentials
         self._logged_in: bool = False
 
     def _get_token(self):
+        """Obtain JWT token from e-kartoteka API using credentials."""
         headers = {"Content-type": "application/json"}
         payload = json.dumps(self._credentials)
         req = request.Request(self.URL_TOKEN, payload.encode(), headers)
@@ -69,6 +85,7 @@ class Ekartoteka(Client):
             return False
 
     def _decode_token(self):
+        """Decode JWT for client id and expiration."""
         stra = self.token.split(".")[1]
         stra += '=' * (-len(stra) % 4)  # restore stripped '='s
         payload = b64decode(stra).decode("utf-8")
@@ -81,9 +98,13 @@ class Ekartoteka(Client):
 
     # noinspection SpellCheckingInspection
     def _get_me(self):
+        """Fetch user info and identifiers required by the API."""
         if self.token is None:
             return False
-        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        headers = {
+            "Content-type": "application/json",
+            'Authorization': f'Bearer {self.token}',
+        }
         req = request.Request(self.URL_ME, headers=headers)
         try:
             response = request.urlopen(req)
@@ -105,15 +126,20 @@ class Ekartoteka(Client):
             return False
 
     def login(self):
+        """Complete the login flow and mark the client as logged in."""
         self._get_token()
         self._get_me()
         self._decode_token()
         self._logged_in = True
 
     def get_settlements(self, year: int):
+        """Retrieve settlements table for a given year."""
         if self.token is None or not self._logged_in:
             raise NotInitializedError()
-        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        headers = {
+            "Content-type": "application/json",
+            'Authorization': f'Bearer {self.token}',
+        }
         url = self.URL_SETTLEMENTS.format(self.user_id, self.client_id, year)
         req = request.Request(url, headers=headers)
         try:
@@ -130,6 +156,7 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_settlements_sum(self, year: int):
+        """Calculate balance sum based on settlements for the year."""
         res, data = self.get_settlements(year=year)
         if not res:
             return False, None
@@ -142,9 +169,13 @@ class Ekartoteka(Client):
             return True, balance
 
     def get_premises_data(self):
+        """Fetch premises data; returns (ok, data) or error description."""
         if self.token is None or not self._logged_in:
             raise NotInitializedError()
-        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        headers = {
+            "Content-type": "application/json",
+            'Authorization': f'Bearer {self.token}',
+        }
         url = self.URL_PREMISES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
         try:
@@ -162,9 +193,13 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_current_fees_sum(self):
+        """Return the current monthly fees total (Brutto)."""
         if self.token is None or not self._logged_in:
             raise NotInitializedError()
-        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        headers = {
+            "Content-type": "application/json",
+            'Authorization': f'Bearer {self.token}',
+        }
         url = self.URL_MONTHLY_FEES_SUM.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
         try:
@@ -181,9 +216,13 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_update_stamp(self):
+        """Return map of monitored categories to their last update date."""
         if self.token is None or not self._logged_in:
             raise NotInitializedError()
-        headers = {"Content-type": "application/json", 'Authorization': f'Bearer {self.token}'}
+        headers = {
+            "Content-type": "application/json",
+            'Authorization': f'Bearer {self.token}',
+        }
         url = self.URL_UPDATE_DATES.format(self.user_id, self.client_id)
         req = request.Request(url, headers=headers)
         try:
@@ -207,6 +246,7 @@ class Ekartoteka(Client):
             return False, "Wrong response structure"
 
     def get_payment_status(self):
+        """Aggregate current apartment fee and payment status info."""
         if self.token is None or not self._logged_in:
             raise NotInitializedError()
         apartment_fee = self.get_current_fees_sum()
@@ -230,8 +270,10 @@ class Ekartoteka(Client):
                 force_unpaid = False
             else:
                 force_unpaid = True
-        return EkartotekaResult(apartment_fee=apartment_fee,
-                                delta=delta,
-                                paid=paid,
-                                force_unpaid=force_unpaid,
-                                update_dates=dates)
+        return EkartotekaResult(
+            apartment_fee=apartment_fee,
+            delta=delta,
+            paid=paid,
+            force_unpaid=force_unpaid,
+            update_dates=dates,
+        )

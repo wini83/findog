@@ -1,3 +1,5 @@
+"""Analytics handler to render plots and summary HTML based on payments."""
+
 import datetime
 import os
 import shutil
@@ -17,6 +19,7 @@ PLOT_DIR = 'plots'
 
 
 def plot(data: pd.DataFrame, column, filename: str) -> None:
+    """Plot a single series to a PNG file."""
     plt.figure(figsize=(12, 4))
     plt.grid(color='#F2F2F2', alpha=1, zorder=0)
     plt.plot(data.index, data[column], color='#087E8B', lw=1, zorder=5)
@@ -31,6 +34,7 @@ def plot(data: pd.DataFrame, column, filename: str) -> None:
 
 
 def plot_all_columns(data_frame):
+    """Generate plots for all columns in the DataFrame."""
     try:
         shutil.rmtree(PLOT_DIR)
         os.mkdir(PLOT_DIR)
@@ -41,16 +45,22 @@ def plot_all_columns(data_frame):
         plot(data_frame, column, filename=f'{PLOT_DIR}/{counter}.png')
         counter += 1
 
+
 def generate__current_index():
+    """Return the first day of the current month (date)."""
     today = datetime.date.today()
     year = today.year
     month = today.month
     return datetime.date(year=year, month=month, day=1)
 
+
 class AnalyticsHandler(AbstractHandler):
+    """Generate current period analytics and optional HTML preview."""
+
     run_dry: bool = False
 
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Build a bar chart for the current period and save it to /data."""
         logger.info("Analytics started")
         try:
             if not self.run_dry:
@@ -67,16 +77,20 @@ class AnalyticsHandler(AbstractHandler):
                 colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
                 vector = row.transpose()
                 vector.to_html("output.html")
-                ax = vector.plot(kind="bar",
-                                 y = generate__current_index(),
-                                 # autopct='%1.1f%%',
-                                 #shadow=True,
-                                 # colors=colors,
-                                 #ylabel = "",
-                                 #labeldistance=None,
-                                 legend=True)
+                ax = vector.plot(
+                    kind="bar",
+                    y=generate__current_index(),
+                    # autopct='%1.1f%%',
+                    # shadow=True,
+                    # colors=colors,
+                    # ylabel = "",
+                    # labeldistance=None,
+                    legend=True,
+                )
                 ax.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
-                plt.savefig("/data/output.png", dpi=300, bbox_inches='tight', pad_inches=0)
+                plt.savefig(
+                    "/data/output.png", dpi=300, bbox_inches='tight', pad_inches=0
+                )
                 logger.info("Analytics completed")
         except Exception as e:
             logger.exception("Problem with Analytics", exc_info=e)

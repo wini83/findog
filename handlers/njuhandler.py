@@ -1,39 +1,57 @@
+"""Handler that integrates with Nju billing to update payments."""
+
 from datetime import datetime
 
 from loguru import logger
 
-from api_clients.nju_client import (Nju, filter_by_current_period,
-                                    filter_not_paid, print_summary)
+from api_clients.nju_client import (
+    Nju,
+    filter_by_current_period,
+    filter_not_paid,
+    print_summary,
+)
 from handlers.context import HandlerContext
 from handlers.handler import AbstractHandler
 
 
 class NjuHandler(AbstractHandler):
+    """Fetch invoices from Nju and update the payment book accordingly."""
 
     def handle(self, context: HandlerContext) -> HandlerContext:
+        """Process all configured Nju accounts and update the sheet."""
         logger.info("nju")
         try:
             queue_accounts = []
             for account in context.nju_credentials:
                 nju_client = Nju(account["phone"], account["password"])
-                account_dict = {"client": nju_client, "sheet": account["sheet"], "category": account["cat"]}
+                account_dict = {
+                    "client": nju_client,
+                    "sheet": account["sheet"],
+                    "category": account["cat"],
+                }
                 queue_accounts.append(account_dict)
             log_str = "Nju:"
             for account in queue_accounts:
                 account["client"].login()
                 account["client"].write2file()
                 account["invoices"] = account["client"].parse_html()
-                account["invoices_current"] = filter_by_current_period(account["invoices"])
+                account["invoices_current"] = filter_by_current_period(
+                    account["invoices"]
+                )
                 account["invoices_payable"] = filter_not_paid(account["invoices"])
                 log_str += "{"
                 log_str += f"phone:{account['client'].phone_nmb} - "
-                log_str += print_summary(account["invoices_payable"], text_if_none="no unpaid invoices")
+                log_str += print_summary(
+                    account["invoices_payable"], text_if_none="no unpaid invoices"
+                )
                 log_str += "}"
                 if not context.no_excel:
                     if len(account["invoices_current"]) > 0:
                         total: float = 0.0
                         paid: bool = True
-                        due_date = datetime.combine(account["invoices_current"][0].due_date, datetime.min.time())
+                        due_date = datetime.combine(
+                            account["invoices_current"][0].due_date, datetime.min.time()
+                        )
                         for invoice in account["invoices_current"]:
                             total += invoice.total()
                             if not invoice.status_bool:
@@ -44,7 +62,7 @@ class NjuHandler(AbstractHandler):
                             amount=total,
                             paid=paid,
                             due_date=due_date,
-                            force_unpaid=True
+                            force_unpaid=True,
                         )
 
             logger.info(log_str)

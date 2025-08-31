@@ -1,3 +1,5 @@
+"""HTTP client for iPrzedszkole to fetch receivables and costs."""
+
 import datetime
 import json
 import re
@@ -10,34 +12,44 @@ from api_clients.client import Client
 
 
 def _extract_amounts_main(bs, ident):
+    """Extract amount (float) from a div with given id."""
     div = bs.find("div", id=ident)
     amount_str = div.get_text().split(' ')[0].replace(",", ".")
     return float(amount_str)
 
 
 def parse_amount(amount):
+    """Parse string amount with comma decimal separator to float."""
     return float(amount.replace(",", "."))
 
 
 def get_last_month_int():
+    """Return previous month number as int."""
     today = datetime.date.today()
     first = today.replace(day=1)
     last_month = first - datetime.timedelta(days=1)
     last_month = last_month.month
     return last_month
 
+
 def aspnet_tokens(html):
+    """Extract ASP.NET form tokens from a response HTML page."""
     bs = BeautifulSoup(html, "html.parser")
+
     def v(name):
         el = bs.find("input", {"name": name})
         return el["value"] if el and el.has_attr("value") else ""
+
     return {
         "__VIEWSTATE": v("__VIEWSTATE"),
         "__EVENTVALIDATION": v("__EVENTVALIDATION"),
         "__VIEWSTATEGENERATOR": v("__VIEWSTATEGENERATOR"),
     }
 
+
 class Receivables(NamedTuple):
+    """Summary of receivables for the current period."""
+
     summary_to_pay: float
     summary_paid: float
     summary_overdue: float
@@ -46,7 +58,9 @@ class Receivables(NamedTuple):
     costs_meal: float
     costs_additional: float
 
+
 def _determine_year_start():
+    """Return the school year start year (September-based)."""
     today = datetime.date.today()
     month = today.month
     year = today.year
@@ -55,20 +69,37 @@ def _determine_year_start():
         delta = 1
     return year - delta
 
+
 class Iprzedszkole(Client):
+    """Session client for iPrzedszkole portal used to fetch data."""
+
     URL_BASE = 'https://iprzedszkole.progman.pl'
-    USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 ' \
-                 'Safari/537.36 '
+    USER_AGENT = (
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/45.0.2454.85 Safari/537.36 '
+    )
     URL_LOGIN = "/iprzedszkole/Authentication/login.aspx"
     URL_MEAL_PLAN = '/iprzedszkole/Pages/PanelRodzica/Jadlospis/Jadlospis.aspx'
-    URL_RECEIVABLES_ANNUAL = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneRaportRoczny'
+    URL_RECEIVABLES_ANNUAL = (
+        '/iprzedszkole/Pages/PanelRodzica/Naleznosci/'
+        'ws_Naleznosci.asmx/pobierzDaneRaportRoczny'
+    )
     URL_RECEIVABLES = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/Naleznosci.aspx'
-    URL_RECEIVABLES_DATA = '/iprzedszkole/Pages/PanelRodzica/Naleznosci/ws_Naleznosci.asmx/pobierzDaneOplat'
+    URL_RECEIVABLES_DATA = (
+        '/iprzedszkole/Pages/PanelRodzica/Naleznosci/'
+        'ws_Naleznosci.asmx/pobierzDaneOplat'
+    )
     HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "User-Agent": (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/125.0.0.0 Safari/537.36'
+        ),
     }
 
     def __init__(self, kindergarten, login, password):
+        """Initialize with kindergarten name and credentials."""
         self.kindergartenName = kindergarten
         self.kindergartenLogin = login
         self.kindergartenPassword = password
@@ -78,9 +109,8 @@ class Iprzedszkole(Client):
         self.logged_in = False
         self.session = None
 
-
-
     def login(self):
+        """Login sequence establishing a requests.Session with tokens."""
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
 
@@ -95,19 +125,27 @@ class Iprzedszkole(Client):
             'ctl00$cphContent$txtDatabase': self.kindergartenName,
             'ctl00$cphContent$txtLogin': self.kindergartenLogin,
             'ctl00$cphContent$txtPassword': self.kindergartenPassword,
-            'ctl00$cphContent$ButtonLogin': 'Zaloguj'
+            'ctl00$cphContent$ButtonLogin': 'Zaloguj',
         }
-        r2 = self.session.post(self.URL_BASE + self.URL_LOGIN, data=payload, headers={"Referer": self.URL_BASE + self.URL_LOGIN}, timeout=20, allow_redirects=True)
+        r2 = self.session.post(
+            self.URL_BASE + self.URL_LOGIN,
+            data=payload,
+            headers={"Referer": self.URL_BASE + self.URL_LOGIN},
+            timeout=20,
+            allow_redirects=True,
+        )
         r2.raise_for_status()
 
         r3 = self.session.get(self.URL_BASE + self.URL_MEAL_PLAN, timeout=20)
 
-
-        child_master_id = re.search(r'<option\s+selected="selected"\s+value="(\d+)">', r3.text)
+        child_master_id = re.search(
+            r'<option\s+selected="selected"\s+value="(\d+)">', r3.text
+        )
         self.child_master_id = child_master_id.group(1)
         self.logged_in = True
 
     def get_receivables(self):
+        """Fetch receivables summary and detail, return a Receivables tuple."""
         if not self.logged_in or not self.session:
             raise ConnectionError("Najpierw wywołaj login().")
 
@@ -145,8 +183,12 @@ class Iprzedszkole(Client):
         month = today.month
         year = today.year
         amounts_summary = next(
-            (p for p in periods if int(p.get("Rok", 0)) == year and int(p.get("Miesiac", 0)) == month),
-            None
+            (
+                p
+                for p in periods
+                if int(p.get("Rok", 0)) == year and int(p.get("Miesiac", 0)) == month
+            ),
+            None,
         )
         if amounts_summary is None:
             # fallback: weź najnowszy dostępny okres (gdy brak bieżącego)
@@ -160,7 +202,9 @@ class Iprzedszkole(Client):
         summary_overpayment = amounts_summary["Nadplata"]
 
         # --- 2) Szczegóły opłat (stała/posiłki/dodatkowe) ---
-        payload_details = {"idDziecko": str(self.child_master_id)}  # ten endpoint nie używa 'args'
+        payload_details = {
+            "idDziecko": str(self.child_master_id)
+        }  # ten endpoint nie używa 'args'
         r2 = self.session.post(
             self.URL_BASE + self.URL_RECEIVABLES_DATA,
             data=json.dumps(payload_details),

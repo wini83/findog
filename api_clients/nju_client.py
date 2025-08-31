@@ -10,8 +10,10 @@ from loguru import logger
 
 # noinspection SpellCheckingInspection
 PAID = "zapłacona"
-USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 ' \
-             'Safari/537.36 '
+USER_AGENT = (
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 '
+    'Safari/537.36 '
+)
 LOGIN_URL = "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury"
 POST_URL = "https://www.njumobile.pl/logowanie?_DARGS=/profile-processes/login/login.jsp.portal-login-form"
 
@@ -40,25 +42,35 @@ def parse_row(row):
             if item['data-title'] == "nr dokumentu":
                 content = item.children.__next__()
                 if content.attrs.__len__() > 0:
-                    document['doc_id']: str = (content['id'].split('-')[1])
+                    document['doc_id']: str = content['id'].split('-')[1]
                 else:
                     document['doc_id']: str = content.text
             elif item['data-title'] == "data wystawienia":
-                date_issue = datetime.datetime.strptime(item.get_text(), "%d.%m.%Y").date()
+                date_issue = datetime.datetime.strptime(
+                    item.get_text(), "%d.%m.%Y"
+                ).date()
                 document['issue_date']: date = date_issue
             elif item['data-title'] == "termin płatności":
-                date_due = datetime.datetime.strptime(item.get_text(), "%d.%m.%Y").date()
+                date_due = datetime.datetime.strptime(
+                    item.get_text(), "%d.%m.%Y"
+                ).date()
                 document['due_date']: date = date_due
             elif item['data-title'] == "data zaksięgowania":
                 if item.get_text() != "":
-                    book_date = datetime.datetime.strptime(item.get_text(), "%d.%m.%Y").date()
+                    book_date = datetime.datetime.strptime(
+                        item.get_text(), "%d.%m.%Y"
+                    ).date()
                 else:
                     book_date = None
                 document['post_date']: date = book_date
             elif item['data-title'] == "kwota zapłacona":
-                document['amount_paid']: float = float(item.get_text().replace(",", ".").split(" ")[0])
+                document['amount_paid']: float = float(
+                    item.get_text().replace(",", ".").split(" ")[0]
+                )
             elif item['data-title'] == "do zapłaty":
-                document['amount_payable']: float = float(item.get_text().replace(",", ".").split(" ")[0])
+                document['amount_payable']: float = float(
+                    item.get_text().replace(",", ".").split(" ")[0]
+                )
             elif item['data-title'] == "typ dokumentu":
                 document['document_type']: str = item.get_text()
             elif item['data-title'] == "za okres":
@@ -112,7 +124,9 @@ class DataClassUnpack:
     @classmethod
     def instantiate(cls, class_2_instantiate, arg_dict):
         if class_2_instantiate not in cls.classFieldCache:
-            cls.classFieldCache[class_2_instantiate] = {f.name for f in fields(class_2_instantiate) if f.init}
+            cls.classFieldCache[class_2_instantiate] = {
+                f.name for f in fields(class_2_instantiate) if f.init
+            }
 
         field_set = cls.classFieldCache[class_2_instantiate]
         filtered_arg_dict = {k: v for k, v in arg_dict.items() if k in field_set}
@@ -159,7 +173,9 @@ class Nju:
     def login(self):
         cj = CookieJar()
         # ssl._create_default_https_context = ssl._create_unverified_context
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(cj)
+        )
         request = urllib.request.Request(LOGIN_URL)
         request.add_header('User-Agent', USER_AGENT)
         try:
@@ -182,14 +198,18 @@ class Nju:
                 "_D:password-form": "+",
                 "login-submit": "zaloguj+się",
                 "_D:login-submit": "+",
-                "_DARGS": "/profile-processes/login/login.jsp.portal-login-form"}
+                "_DARGS": "/profile-processes/login/login.jsp.portal-login-form",
+            }
 
             form_data = urllib.parse.urlencode(payload)
             request = urllib.request.Request(POST_URL)
             request.data = form_data.encode('utf-8')
             request.add_header('User-Agent', self.userAgent)
             request.add_header("Origin", "https://www.njumobile.pl")
-            request.add_header("Referer", "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury")
+            request.add_header(
+                "Referer",
+                "https://www.njumobile.pl/logowanie?backUrl=/mojekonto/faktury",
+            )
             result = self.opener.open(request)
             self.logged_in = True
             result_str = result.read().decode('utf-8')
