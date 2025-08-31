@@ -68,7 +68,7 @@ przedszkole:  { kindergarten: "p_city", username: "rodzic_123456" }
 
 # mapowanie, gdzie w Excelu aktualizować wartości
 ekartoteka_sheet: ["Ania & Mario", "Mieszkanie czynsz"]
-przedszkole_sheet: ["Ania & Mario", "Placówka Mati"]
+przedszkole_sheet: ["Ania & Mario", "Przedszkole Geroge"]
 enea_sheet:        ["Ania & Mario", "Prąd Enea"]
 
 # powiadomienia mailowe

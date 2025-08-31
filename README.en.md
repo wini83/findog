@@ -67,9 +67,9 @@ enea:         { username: "user@server.com" }
 przedszkole:  { kindergarten: "p_city", username: "rodzic_123456" }
 
 # mapping where to update values in Excel
-ekartoteka_sheet: ["Ania & Mario", "Mieszkanie czynsz"]
-przedszkole_sheet: ["Ania & Mario", "Placówka Mati"]
-enea_sheet:        ["Ania & Mario", "Prąd Enea"]
+ekartoteka_sheet: ["Main", "Mieszkanie czynsz"]
+przedszkole_sheet: ["Main", "Kindergarten George"]
+enea_sheet:        ["Main", "Prąd Enea"]
 
 # e‑mail notifications
 gmail_user: "noreply@server.com"
