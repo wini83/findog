@@ -1,11 +1,11 @@
 [project]
 name = "findog"
-version = "0.6.0"
+version = "0.7.0"
 description = "A simple program to keep your payments in check"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.6.0"
+version = "0.7.0"
 tag_format = "v$version"
 version_files = ["pyproject.toml"]
 update_changelog_on_bump = true
