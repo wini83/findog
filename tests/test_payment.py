@@ -12,15 +12,28 @@ class TestPayment:
         assert pmt.paid
         assert pmt.paid_status == "paid"
 
-    def test_payable_within_2days(self):
+    def test_due_soon_or_overdue_alias(self):
         pmt: Payment = Payment(due_date=datetime.now())
-        assert pmt.payable_within_2days
-        pmt.paid = True
-        assert not pmt.payable_within_2days
+        # Both properties should return the same value
+        assert pmt.due_soon_or_overdue == pmt.payable_within_2days
 
+    def test_due_soon_or_overdue_logic(self):
+        # Due today and unpaid -> True
+        pmt: Payment = Payment(paid=False, due_date=datetime.now())
+        assert pmt.due_soon_or_overdue
+
+        # Paid -> always False
+        pmt.paid = True
+        assert not pmt.due_soon_or_overdue
+
+        # Unpaid and due in > 2 days -> False
         pmt.paid = False
-        pmt.due_date += timedelta(days=3)
-        assert not pmt.payable_within_2days
+        pmt.due_date = datetime.now() + timedelta(days=3)
+        assert not pmt.due_soon_or_overdue
+
+        # Unpaid and overdue -> True
+        pmt.due_date = datetime.now() - timedelta(days=1)
+        assert pmt.due_soon_or_overdue
 
     def test_overdue(self):
         date_in_past = datetime.now() - timedelta(days=2)

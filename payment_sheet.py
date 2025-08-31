@@ -1,7 +1,6 @@
 """Sheet-level helpers to read, write and format payment data."""
 
 import calendar
-import string
 from copy import copy
 from datetime import datetime, timedelta
 from typing import Dict, List
@@ -32,11 +31,11 @@ class PaymentSheet:
     """Abstraction over an openpyxl Worksheet for payments."""
 
     _sheet: Worksheet = None
-    _name: string = None
+    _name: str = None
     _categories: Dict[str, PaymentCategory] = None
     _monitored_cols: List[str] = None
 
-    def __init__(self, worksheet: Worksheet, name: string, monitored_cols: List[str]):
+    def __init__(self, worksheet: Worksheet, name: str, monitored_cols: List[str]):
         """Bind to a worksheet and configure monitored columns."""
         self._categories = {}
         self._sheet = worksheet
@@ -87,7 +86,7 @@ class PaymentSheet:
 
     def populate_categories(self, active_row: int):
         """Populate internal categories and payments from the active row up."""
-        # TODO:secure
+        # NOTE: consider validation/sanitization if inputs can be external
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
             item: PaymentCategory = PaymentCategory(name=name, column=column)
@@ -134,7 +133,7 @@ class PaymentSheet:
         cell_this_month: Cell = self.sheet.cell(column=1, row=active_row)
         cell_this_month.fill = YELLOW_FILL
         cell_this_month_sum.fill = YELLOW_FILL
-        # TODO:Add checks
+        # NOTE: consider adding checks for edge cases
         cell_previous_month_sum: Cell = self.sheet.cell(column=2, row=active_row - 1)
         cell_previous_month: Cell = self.sheet.cell(column=1, row=active_row - 1)
         cell_previous_month.fill = GREEN_FILL
@@ -143,7 +142,7 @@ class PaymentSheet:
     # noinspection PyDunderSlots,PyUnresolvedReferences
     def format_payment(self, column: int, payment: Payment):
         """Apply fills to amount/paid/due cells depending on status."""
-        # TODO: add some checks
+        # NOTE: add input validation if needed
         cell_amount: Cell = self.sheet.cell(row=payment.excel_row, column=column)
         cell_paid: Cell = self.sheet.cell(row=payment.excel_row, column=column + 1)
         cell_due_date: Cell = self.sheet.cell(row=payment.excel_row, column=column + 2)
@@ -213,7 +212,6 @@ class PaymentSheet:
                 next_due_date_cell.font = copy(current_due_date_cell.font)
                 next_due_date_cell.border = copy(current_due_date_cell.border)
             next_due_date_cell.fill = BLUE_FILL
-        pass
 
     def _generate_sum_string(self, row: int):
         """Build an Excel SUM formula over monitored columns for the row."""

@@ -21,3 +21,7 @@ class PaymentCategory:
     def __str__(self):
         """Return the category name for display."""
         return f"{self.name}"
+
+    def has_payments(self) -> bool:
+        """Return True when the category contains any payments."""
+        return bool(self.payments)

@@ -13,9 +13,12 @@ class Payment:
     excel_row: int
     due_date: datetime
 
-    def __init__(self, paid=False, due_date=datetime.now(), amount=0.0, excel_row=0):
-        """Create a payment with defaults for status, date, amount and row."""
-        self.due_date = due_date
+    def __init__(self, paid=False, due_date=None, amount=0.0, excel_row=0):
+        """Create a payment with defaults for status, date, amount and row.
+
+        Note: avoid using datetime.now() as a default argument value.
+        """
+        self.due_date = due_date or datetime.now()
         self.amount: float = amount
         self.paid: bool = paid
         self.excel_row: int = excel_row
@@ -29,30 +32,32 @@ class Payment:
         """Text label describing whether the payment is paid."""
         if self.paid:
             return "paid"
-        else:
-            return "not yet paid"
+        return "not yet paid"
 
     @property
     def payable_within_2days(self) -> bool:
-        """True if unpaid and due date is within the next two days."""
+        """True if unpaid and either overdue or due within the next two days.
+
+        Note: includes past-due items (negative delta) as "within 2 days" to
+        reflect urgency.
+        """
         today = datetime.now()
         delta = self.due_date - today
-        if not self.paid:
-            if delta.days <= 2:
-                return True
-            return False
-        else:
-            return False
+        return (not self.paid) and (delta.days <= 2)
+
+    @property
+    def due_soon_or_overdue(self) -> bool:
+        """Alias for readability; same semantics as `payable_within_2days`."""
+        today = datetime.now()
+        delta = self.due_date - today
+        return (not self.paid) and (delta.days <= 2)
 
     @property
     def overdue(self) -> bool:
         """True if past due and still unpaid."""
         today = datetime.now()
         delta = self.due_date - today
-        if delta.total_seconds() < 0 and not self.paid:
-            return True
-        else:
-            return False
+        return (delta.total_seconds() < 0) and (not self.paid)
 
     @property
     def b_days_left(self) -> int:

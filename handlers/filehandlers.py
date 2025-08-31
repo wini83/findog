@@ -12,22 +12,26 @@ from payment_list_item import PaymentListItem
 class FileDownloadHandler(AbstractHandler):
     """Download the Excel file from Dropbox into memory."""
 
-    # noinspection PyBroadException
     def handle(self, context: HandlerContext) -> HandlerContext:
         """Retrieve file bytes using Dropbox client and pass along the chain."""
         logger.info("Downloading File...")
-        if context is not None:
-            try:
-                context.file_object = context.dropbox_client.retrieve_file(
-                    context.excel_dropbox_path
-                )
-                logger.info(f"File {context.excel_file_name} downloaded")
-                return super().handle(context)
-            except Exception:
-                # TODO: narrow exception
-                logger.exception("Problem with download excel file")
-                context.pushover.error("Problem with download excel file")
-                sys.exit(1)
+        if context is None:
+            logger.error("Context is None in FileDownloadHandler")
+            return None
+        try:
+            context.file_object = context.dropbox_client.retrieve_file(
+                context.excel_dropbox_path
+            )
+            logger.info(f"File {context.excel_file_name} downloaded")
+            return super().handle(context)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            # NOTE: Dropbox client may raise various exceptions; catching broadly here
+            # keeps the pipeline resilient and delegates user notification.
+            logger.exception("Problem with download excel file: %s", exc)
+            context.pushover.error("Problem with download excel file")
+            if getattr(context, "silent", False):
+                return context
+            sys.exit(1)
 
     def __str__(self):
         """Human-readable name for logs."""
@@ -47,9 +51,10 @@ class FileProcessHandler(AbstractHandler):
             context.payment_book.load_and_process(context.file_object)
             logger.info(f"File {context.excel_file_name} processed successfully")
             return super().handle(context)
-        else:
-            logger.error("Context not initialized")
-            sys.exit(0)
+        logger.error("Context not initialized")
+        if getattr(context, "silent", False):
+            return context
+        sys.exit(0)
 
     def __str__(self):
         """Human-readable name for logs."""
@@ -66,13 +71,13 @@ class NotifyOngoingHandler(AbstractHandler):
         payload: str = ""
         i: int = 0
         for item in pmt_list:
-            if item.payment.payable_within_2days:
+            if item.payment.due_soon_or_overdue:
                 new_str = str(item) + "\n"
                 payload += new_str
                 i += 1
         if i > 0:
             context.pushover.notify(payload)
-        else:
+        if i == 0:
             payload = "None :)"
         logger.info(f'payments:{payload}')
         return super().handle(context)

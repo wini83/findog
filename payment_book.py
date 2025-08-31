@@ -1,6 +1,5 @@
 """Workbook access and operations for payments tracking."""
 
-import string
 from datetime import date, datetime
 from io import BytesIO
 from typing import Dict, List
@@ -43,7 +42,7 @@ class PaymentBook:
         """Load workbook from bytes and build internal structures."""
         self._workbook = load_workbook(filename=BytesIO(file), keep_vba=True)
         for sheet_name, monit_cats in self.monitored_sheets.items():
-            if self._workbook.__contains__(sheet_name):
+            if sheet_name in self._workbook:
                 payment_sheet = PaymentSheet(
                     self._workbook[sheet_name], sheet_name, monit_cats
                 )
@@ -59,51 +58,63 @@ class PaymentBook:
 
     def update_current_payment(
         self,
-        sheet_name: string,
-        category_name: string,
+        sheet_name: str,
+        category_name: str,
         amount: float = None,
         paid: bool = None,
         due_date: datetime = None,
         force_unpaid: bool = None,
     ):
         """Update fields in the current month row for a given category."""
-        # TODO: refactor
-        sheet: PaymentSheet = self._payment_sheets[sheet_name]
-        if sheet.name == sheet_name:
-            cat = sheet.categories[category_name]
-            # TODO:Secure
-            if cat.name == category_name:
-                now = datetime.now()
-                pmt = cat.payments[f'{now.year}-{now.month}']
-                # TODO:Secure
-                if (
-                    pmt.due_date.year == date.today().year
-                    and pmt.due_date.month == date.today().month
-                ):
-                    cell_amount: Cell = sheet.sheet[f'{cat.column}{pmt.excel_row}']
-                    cell_paid: Cell = sheet.sheet.cell(
-                        row=cell_amount.row, column=cell_amount.column + 1
-                    )
-                    cell_due_date: Cell = sheet.sheet.cell(
-                        row=cell_amount.row, column=cell_amount.column + 2
-                    )
-                    if force_unpaid is None:
-                        force_unpaid = True
-                    if amount is not None:
-                        pmt.amount = amount
-                        cell_amount.value = amount
-                    if paid is not None:
-                        if not paid:
-                            if force_unpaid:
-                                cell_paid.value = int(paid)
-                                pmt.paid = paid
-                        else:
-                            pmt.paid = paid
-                            cell_paid.value = int(paid)
-                    if due_date is not None:
-                        pmt.due_date = due_date
-                        cell_due_date.value = due_date
-                        sheet.format_payment(cell_amount.column, pmt)
+        # NOTE: this method can be refactored further if API allows
+        # pylint: disable=too-many-arguments,too-many-positional-arguments
+        sheet: PaymentSheet = self._payment_sheets.get(sheet_name)
+        if not sheet or sheet.name != sheet_name:
+            return
+
+        cat = sheet.categories.get(category_name)
+        if not cat or cat.name != category_name:
+            return
+
+        now = datetime.now()
+        pmt = cat.payments.get(f'{now.year}-{now.month}')
+        if not pmt:
+            return
+
+        if not (
+            pmt.due_date.year == date.today().year
+            and pmt.due_date.month == date.today().month
+        ):
+            return
+
+        cell_amount: Cell = sheet.sheet[f'{cat.column}{pmt.excel_row}']
+        cell_paid: Cell = sheet.sheet.cell(
+            row=cell_amount.row, column=cell_amount.column + 1
+        )
+        cell_due_date: Cell = sheet.sheet.cell(
+            row=cell_amount.row, column=cell_amount.column + 2
+        )
+
+        if force_unpaid is None:
+            force_unpaid = True
+
+        if amount is not None:
+            pmt.amount = amount
+            cell_amount.value = amount
+
+        if paid is not None:
+            if not paid:
+                if force_unpaid:
+                    cell_paid.value = int(paid)
+                    pmt.paid = paid
+            else:
+                pmt.paid = paid
+                cell_paid.value = int(paid)
+
+        if due_date is not None:
+            pmt.due_date = due_date
+            cell_due_date.value = due_date
+            sheet.format_payment(cell_amount.column, pmt)
 
     @property
     def payment_list(self) -> List[PaymentListItem]:
