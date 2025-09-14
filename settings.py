@@ -19,7 +19,6 @@ class Cred(BaseModel):
     password: Optional[str] = None
     kindergarten: Optional[str] = None        # dla przedszkole
     phone: Optional[str] = None
-    phone: Optional[str] = None
     sheet: Optional[str] = None
     cat: Optional[str] = None
     # dla nju
