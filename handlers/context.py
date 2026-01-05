@@ -1,7 +1,6 @@
 """Execution context passed between handlers in the pipeline."""
 
 import os
-from typing import List
 
 from api_clients.dropbox_client import DropboxClient
 from payment_book import PaymentBook
@@ -29,7 +28,7 @@ class HandlerContext:
         self.recipients = settings.recipients
         self.gmail_user = settings.gmail_user
         self.gmail_pass = settings.gmail_pass or ""
-        self.statuses: List[str] = []
+        self.statuses: list[str] = []
         self.nju_credentials = [c.model_dump() for c in settings.nju_credentials]
         self.no_excel = False
 

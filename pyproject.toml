@@ -2,6 +2,38 @@
 name = "findog"
 version = "0.7.0"
 description = "A simple program to keep your payments in check"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "Mario" }
+]
+
+dependencies = [
+  "dropbox~=12.0.2",
+  "openpyxl~=3.1.5",
+  "click~=8.1.8",
+  "colorama",
+  "jinja2~=3.1.6",
+  "loguru~=0.7.3",
+  "numpy~=2.2.4",
+  "beautifulsoup4~=4.13.3",
+  "pandas~=2.2.3",
+  "matplotlib~=3.10.1",
+  "requests~=2.32.3",
+  "PyYAML~=6.0.2",
+  "pydantic~=2.11.7",
+  "pydantic-settings~=2.10.1",
+]
+
+[dependency-groups]
+dev = [
+  "ruff",
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "commitizen",
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -10,28 +42,31 @@ tag_format = "v$version"
 version_files = ["pyproject.toml"]
 update_changelog_on_bump = true
 
-[tool.black]
-line-length = 88
-target-version = ["py311"]
-skip-string-normalization = true
-
-[tool.isort]
-profile = "black"
-line_length = 88
-
-[tool.mypy]
-python_version = "3.11"
-strict = true
-ignore_missing_imports = true
-
 [tool.ruff]
 line-length = 88
-target-version = "py311"
-lint.select = ["E", "F", "I", "N"]
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "build",
-    "dist",
+target-version = "py312"
+
+lint.select = [
+  "E", "F",        # podstawowa higiena
+  "I",             # import sorting (isort RIP)
+  "N",             # naming
+  "UP",            # pyupgrade
+  "B",             # bugbear
 ]
+
+exclude = [
+  ".git",
+  ".venv",
+  "__pycache__",
+  "build",
+  "dist",
+]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+no_implicit_optional = true

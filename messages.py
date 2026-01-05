@@ -1,7 +1,5 @@
 """Message templates rendering helpers."""
 
-from typing import Optional
-
 import jinja2
 
 
@@ -11,7 +9,7 @@ class Message:
     Subclasses should define ``TEMPLATE_FILE`` with a path to the template file.
     """
 
-    TEMPLATE_FILE: Optional[str] = None
+    TEMPLATE_FILE: str | None = None
 
     def __init__(self):
         template_loader = jinja2.FileSystemLoader(searchpath="./")
