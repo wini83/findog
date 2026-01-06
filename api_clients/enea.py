@@ -1,11 +1,12 @@
 """Scraper for ENEA portal to collect invoices and readouts."""
 
-import datetime
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from http.cookiejar import CookieJar
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from api_clients.client import Client
 
@@ -31,9 +32,9 @@ def parse_energy(amount):
 
 def get_last_month_int():
     """Return previous month number as int."""
-    today = datetime.date.today()
+    today = date.today()
     first = today.replace(day=1)
-    last_month = first - datetime.timedelta(days=1)
+    last_month = first - timedelta(days=1)
     last_month = last_month.month
     return last_month
 
@@ -50,82 +51,125 @@ class EneaResults:
     last_readout_amount_kwh: float
     last_readout_date: datetime
 
-    def __init__(
-        self,
-        last_invoice_date: datetime,
-        last_invoice_due_date: datetime,
-        last_invoice_amount_pln: float,
-        last_invoice_unpaid_pln: float,
-        last_invoice_status: str,
-        last_readout_amount_kwh: float,
-        last_readout_date: datetime,
-    ):
-        self.last_invoice_date = last_invoice_date
-        self.last_invoice_due_date = last_invoice_due_date
-        self.last_invoice_amount_pln = last_invoice_amount_pln
-        self.last_invoice_unpaid_pln = last_invoice_unpaid_pln
-        self.last_invoice_status = last_invoice_status
-        self.last_readout_amount_kwh = last_readout_amount_kwh
-        self.last_readout_date = last_readout_date
+
+class ScraperStructureError(RuntimeError):
+    pass
 
 
-def _extract_last_invoice(soup):
+def _extract_invoice_date(row: Tag):
+    el = find_or_fail(
+        row,
+        {'name': 'div', 'attrs': {'class': 'datagrid-col-invoice-prognosis-date'}},
+        'invoice issue date',
+    )
+    return parse_date(strip_div(el.get_text()))
+
+
+def _extract_due_date(row: Tag):
+    el = find_or_fail(
+        row,
+        {
+            'name': 'div',
+            'attrs': {'class': 'datagrid-col-invoice-prognosis-payment-date'},
+        },
+        'invoice due date',
+    )
+    return parse_date(strip_div(el.get_text()))
+
+
+def _extract_invoice_value(row: Tag):
+    el = find_or_fail(
+        row,
+        {'name': 'div', 'attrs': {'class': 'datagrid-col-invoice-prognosis-value'}},
+        'invoice total value',
+    )
+    return parse_amount(strip_div(el.get_text()))
+
+
+def _extract_invoice_unpaid(row: Tag):
+    el = find_or_fail(
+        row,
+        {'name': 'div', 'attrs': {'class': 'datagrid-col-invoice-prognosis-payment'}},
+        'invoice unpaid value',
+    )
+    return parse_amount(strip_div(el.get_text()))
+
+
+def _extract_invoice_status(row: Tag) -> str:
+    status_col = find_or_fail(
+        row,
+        {'name': 'div', 'attrs': {'class': 'datagrid-col-invoice-prognosis-status'}},
+        'invoice status column',
+    )
+
+    texts = list(status_col.stripped_strings)
+
+    if not texts:
+        raise ScraperStructureError("ENEA HTML changed: empty invoice status")
+
+    return " ".join(texts)
+
+
+def _extract_last_invoice(soup: BeautifulSoup):
     """Extract last invoice tuple from HTML soup."""
-    row_div = soup.find('div', {'class': 'datagrid-row invoice-row'})
-    date_issue_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-invoice-real-date'}
+
+    row = find_or_fail(
+        soup,
+        {'name': 'div', 'attrs': {'class': 'datagrid-row invoice-row'}},
+        'invoice row',
     )
-    invoice_date = date_issue_div.get_text()
-    invoice_date = strip_div(invoice_date)
-    invoice_date = parse_date(invoice_date)
-    due_date_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-invoice-real-payment-date'}
-    )
-    due_date = due_date_div.get_text()
-    due_date = strip_div(due_date)
-    due_date = parse_date(due_date)
-    value_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-invoice-real-value'}
-    )
-    value = value_div.get_text()
-    value = strip_div(value)
-    value = parse_amount(value)
-    unpaid_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-invoice-real-payment'}
-    )
-    unpaid = unpaid_div.get_text()
-    unpaid = strip_div(unpaid)
-    unpaid = parse_amount(unpaid)
-    status_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-invoice-status'}
-    )
-    status = status_div.get_text()
-    status = strip_div(status, nested=True)
+
+    invoice_date = _extract_invoice_date(row)
+    due_date = _extract_due_date(row)
+    value = _extract_invoice_value(row)
+    unpaid = _extract_invoice_unpaid(row)
+    status = _extract_invoice_status(row)
 
     return invoice_date, due_date, value, unpaid, status
 
 
-def _extract_last_readout(soup):
+def _extract_readout_date(row: Tag) -> datetime:
+    el = find_or_fail(
+        row,
+        {
+            'name': 'div',
+            'attrs': {'class': 'datagrid-col-history-consumption-date'},
+        },
+        'readout date',
+    )
+    return parse_date(strip_div(el.get_text()))
+
+
+def _extract_readout_value(row: Tag) -> float:
+    el = find_or_fail(
+        row,
+        {
+            'name': 'div',
+            'attrs': {'class': 'datagrid-col-history-consumption-value-0'},
+        },
+        'readout value',
+    )
+    return parse_energy(strip_div(el.get_text()))
+
+
+def _extract_last_readout(soup: BeautifulSoup):
     """Extract last readout value/date from HTML soup."""
-    row_div = soup.find('div', {'class': 'datagrid-row-content'})
-    date_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-history-consumption-date'}
+
+    row = find_or_fail(
+        soup,
+        {'name': 'div', 'attrs': {'class': 'datagrid-row-content'}},
+        'readout row',
     )
-    readout_date = date_div.get_text()
-    readout_date = strip_div(readout_date)
-    readout_date = parse_date(readout_date)
-    value_div = row_div.find(
-        'div', {'class': 'datagrid-col datagrid-col-history-consumption-value-0'}
-    )
-    readout_value = value_div.get_text()
-    readout_value = strip_div(readout_value)
-    readout_value = parse_energy(readout_value)
+
+    readout_date = _extract_readout_date(row)
+    readout_value = _extract_readout_value(row)
+
     return readout_value, readout_date
 
 
 def parse_date(text: str):
     """Parse date in format 'dd.mm.yyyy'."""
-    return datetime.datetime.strptime(text, "%d.%m.%Y")
+    return datetime.strptime(text, "%d.%m.%Y")
 
 
 def strip_div(text: str, nested: bool = False):
@@ -134,6 +178,24 @@ def strip_div(text: str, nested: bool = False):
         return text.replace("\n", "")
     else:
         return text.replace("\n\n", "").replace("\n", " ")
+
+
+def find_or_fail(
+    soup,
+    selector: dict,
+    label: str,
+) -> Tag:
+    el = soup.find(**selector)
+
+    if el is None:
+        raise ScraperStructureError(f"ENEA HTML changed: cannot find {label}")
+
+    if not isinstance(el, Tag):
+        raise ScraperStructureError(
+            f"ENEA HTML changed: {label} is not a Tag ({type(el).__name__})"
+        )
+
+    return el
 
 
 class Enea(Client):
@@ -171,7 +233,12 @@ class Enea(Client):
         result = result.decode('utf-8')
 
         soup = BeautifulSoup(result, 'html.parser')
-        token = soup.find('input', {'name': 'token'})['value']
+        token_input = find_or_fail(
+            soup,
+            {'name': 'input', 'attrs': {'name': 'token'}},
+            'login token input',
+        )
+        token = token_input.get("value")
 
         form_parameters = {
             'email': self.email,
@@ -195,12 +262,13 @@ class Enea(Client):
 
     def get_data(self) -> EneaResults:
         """Collect last invoice and readout, return as `EneaResults`."""
-
+        if self.opener is None:
+            raise RuntimeError("ENEA client not logged in")
         request = urllib.request.Request(self.URL_BASE + self.URL_INVOICES)
         request.add_header('User-Agent', self.userAgent)
         result = self.opener.open(request).read()
         result = result.decode('utf-8')
-        soup = BeautifulSoup(result, 'html.parser')
+        soup: BeautifulSoup = BeautifulSoup(result, 'html.parser')
         invoice_date, due_date, value, unpaid, status = _extract_last_invoice(soup)
 
         request = urllib.request.Request(self.URL_BASE + self.URL_READOUTS)

@@ -2,7 +2,6 @@
 
 import datetime
 from math import floor
-from typing import List
 
 from loguru import logger
 
@@ -19,7 +18,7 @@ class Mailer(Client):
 
     adapter: GmailAdapter = None
     book: PaymentBook = None
-    statuses: List[str]
+    statuses: list[str]
 
     def __init__(
         self,
@@ -58,7 +57,7 @@ class Mailer(Client):
             if payment_li.payment.due_date.year == year
             and payment_li.payment.due_date.month == month
         )
-        data2: List[PaymentListItem] = []
+        data2: list[PaymentListItem] = []
         for pmt in data:
             if not pmt.payment.paid:
                 data2.append(pmt)

@@ -3,7 +3,6 @@
 import calendar
 from copy import copy
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 from openpyxl.cell import Cell
 from openpyxl.styles import Color, PatternFill
@@ -32,10 +31,10 @@ class PaymentSheet:
 
     _sheet: Worksheet = None
     _name: str = None
-    _categories: Dict[str, PaymentCategory] = None
-    _monitored_cols: List[str] = None
+    _categories: dict[str, PaymentCategory] = None
+    _monitored_cols: list[str] = None
 
-    def __init__(self, worksheet: Worksheet, name: str, monitored_cols: List[str]):
+    def __init__(self, worksheet: Worksheet, name: str, monitored_cols: list[str]):
         """Bind to a worksheet and configure monitored columns."""
         self._categories = {}
         self._sheet = worksheet
@@ -43,17 +42,17 @@ class PaymentSheet:
         self._monitored_cols = monitored_cols
 
     @property
-    def monitored_cols(self) -> List[str]:
+    def monitored_cols(self) -> list[str]:
         """Return the list of monitored column letters."""
         return self._monitored_cols
 
     @monitored_cols.setter
-    def monitored_cols(self, value: List[str]):
+    def monitored_cols(self, value: list[str]):
         """Set the list of monitored column letters."""
         self._monitored_cols = value
 
     @property
-    def categories(self) -> Dict[str, PaymentCategory]:
+    def categories(self) -> dict[str, PaymentCategory]:
         """Return a mapping from category name to PaymentCategory."""
         return self._categories
 

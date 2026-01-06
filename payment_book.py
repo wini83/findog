@@ -2,7 +2,6 @@
 
 from datetime import date, datetime
 from io import BytesIO
-from typing import Dict, List
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell
@@ -12,13 +11,13 @@ from payment_sheet import PaymentSheet
 
 
 def sort_payment_list_by_date(
-    item_list: List[PaymentListItem],
-) -> List[PaymentListItem]:
+    item_list: list[PaymentListItem],
+) -> list[PaymentListItem]:
     """Return items sorted by payment due date ascending."""
     return sorted(item_list, key=lambda x: x.payment.due_date, reverse=False)
 
 
-def make_json_payments(item_list: List[PaymentListItem]):
+def make_json_payments(item_list: list[PaymentListItem]):
     """Serialize list items into JSON-friendly list of dicts."""
     result = []
     for item3 in item_list:
@@ -29,7 +28,7 @@ def make_json_payments(item_list: List[PaymentListItem]):
 class PaymentBook:
     """High-level API to read/update monitored payment sheets in a workbook."""
 
-    _payment_sheets: Dict[str, PaymentSheet] = None
+    _payment_sheets: dict[str, PaymentSheet] = None
     _workbook: Workbook = None
     _monitored_sheets = None
 
@@ -117,9 +116,9 @@ class PaymentBook:
             sheet.format_payment(cell_amount.column, pmt)
 
     @property
-    def payment_list(self) -> List[PaymentListItem]:
+    def payment_list(self) -> list[PaymentListItem]:
         """Flatten all sheet categories into a single list of items."""
-        result: List[PaymentListItem] = []
+        result: list[PaymentListItem] = []
         for sheet in self._payment_sheets.values():
             for category in sheet.categories.values():
                 for payment in category.payments.values():

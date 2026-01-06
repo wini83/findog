@@ -17,9 +17,9 @@ def generate_dataframe(payment_book: PaymentBook):
             for key_payment, payment in category.payments.items():
                 date_index = key_2_date(key_payment)
                 if result.get(date_index):
-                    result[key_2_date(key_payment)][
-                        f'{key_sheet}/{key_category}'
-                    ] = payment.amount
+                    result[key_2_date(key_payment)][f'{key_sheet}/{key_category}'] = (
+                        payment.amount
+                    )
                 else:
                     result[key_2_date(key_payment)] = {
                         f'{key_sheet}/{key_category}': payment.amount

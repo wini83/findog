@@ -3,7 +3,6 @@ import urllib
 from dataclasses import dataclass, fields
 from datetime import date
 from http.cookiejar import CookieJar
-from typing import List
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -134,19 +133,19 @@ class DataClassUnpack:
         return class_2_instantiate(**filtered_arg_dict)
 
 
-def filter_by_current_period(table: List[NjuInvoice]):
+def filter_by_current_period(table: list[NjuInvoice]):
     now = datetime.datetime.now()
     filter_str = now.strftime("%m.%Y")
     list_out = list(filter(lambda x: x.accounting_period == filter_str, table))
     return list_out
 
 
-def filter_not_paid(table: List[NjuInvoice]):
+def filter_not_paid(table: list[NjuInvoice]):
     list_out = list(filter(lambda x: not x.status_bool, table))
     return list_out
 
 
-def print_summary(table: List[NjuInvoice], text_if_none: str = "") -> str:
+def print_summary(table: list[NjuInvoice], text_if_none: str = "") -> str:
     result: str = ""
     if len(table) > 0:
         total: float = 0
@@ -164,7 +163,6 @@ def print_summary(table: List[NjuInvoice], text_if_none: str = "") -> str:
 
 
 class Nju:
-
     def __init__(self, phone_nmb: str, password: str):
         self.userAgent = USER_AGENT
         self.opener = None
@@ -192,13 +190,11 @@ class Nju:
             payload = {
                 "_dyncharset": "UTF-8",
                 "_dynSessConf": authenticity_token,
-                "/ptk/sun/login/formhandler/"
-                "LoginFormHandler.backUrl": (
+                "/ptk/sun/login/formhandler/LoginFormHandler.backUrl": (
                     "/mojekonto/faktury"
                 ),
                 "_D:/ptk/sun/login/formhandler/LoginFormHandler.backUrl": "+",
-                "/ptk/sun/login/formhandler/"
-                "LoginFormHandler.hashMsisdn": "",
+                "/ptk/sun/login/formhandler/LoginFormHandler.hashMsisdn": "",
                 "_D:/ptk/sun/login/formhandler/LoginFormHandler.hashMsisdn": "+",
                 "phone-input": self.phone_nmb,
                 "_D:phone-input": "+",
@@ -206,9 +202,7 @@ class Nju:
                 "_D:password-form": "+",
                 "login-submit": "zaloguj+się",
                 "_D:login-submit": "+",
-                "_DARGS": (
-                    "/profile-processes/login/login.jsp.portal-login-form"
-                ),
+                "_DARGS": ("/profile-processes/login/login.jsp.portal-login-form"),
             }
 
             form_data = urllib.parse.urlencode(payload)

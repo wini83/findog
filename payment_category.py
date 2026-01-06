@@ -1,7 +1,5 @@
 """Category grouping payments within a sheet."""
 
-from typing import Dict
-
 from payment import Payment
 
 
@@ -9,7 +7,7 @@ class PaymentCategory:
     """Represents a category column in the workbook."""
 
     name: str = None
-    payments: Dict[str, Payment] = None
+    payments: dict[str, Payment] = None
     icon = None
 
     def __init__(self, name="", column="C"):

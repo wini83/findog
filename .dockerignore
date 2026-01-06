@@ -1,0 +1,40 @@
+# --- Python runtime junk ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual environments ---
+.venv/
+.uv/
+.env
+.env.*
+
+# --- Local data & state ---
+data/
+logs/
+*.log
+
+# --- Secrets (ABSOLUTNIE NIE DO OBRAZU) ---
+secrets/
+config/config.yaml
+
+# --- Tests & dev-only ---
+tests/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# --- Git / editor ---
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Docker files not needed in image ---
+docker-compose.yml
+docker-compose-example.yml
