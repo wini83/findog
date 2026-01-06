@@ -27,7 +27,10 @@ API_IPRZEDSZKOLE = "iprzedszkole"
 API_ENEA = "enea"
 API_NJU = "nju"
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/data"))
+PROJECT_ROOT = Path(__file__).resolve().parent
+DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
+
+DATA_DIR = Path(os.getenv("DATA_DIR", DEFAULT_DATA_DIR))
 LOG_DIR = DATA_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -47,7 +50,9 @@ logger.add(
 logger.add(sys.stdout, level="INFO")
 
 
-def get_handler(current_handler: Handler, starter: Handler, new_handler: Handler):
+def get_handler(
+    current_handler: Handler | None, starter: Handler | None, new_handler: Handler
+):
     if current_handler is None:
         return new_handler, new_handler
     else:
@@ -135,10 +140,8 @@ def main(
     mailer = MailingHandler()
     mailer.run_dry = not enable_notification
 
-    # noinspection PyTypeChecker
-    starter: Handler = None
-    # noinspection PyTypeChecker
-    handler: Handler = None
+    starter: Handler | None = None
+    handler: Handler | None = None
 
     if enable_dropbox:
         starter = FileDownloadHandler()
