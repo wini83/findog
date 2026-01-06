@@ -4,7 +4,7 @@
 
 Automatic home payments assistant: fetches amounts and due dates from several services, updates an Excel workbook stored in Dropbox, reminds you about upcoming deadlines (Pushover), sends an e‑mail summary, and optionally generates simple analytics.
 
-[![CI: Pylint](https://github.com/wini83/findog/actions/workflows/pylint.yml/badge.svg)](https://github.com/wini83/findog/actions/workflows/pylint.yml)
+[![CI](https://github.com/wini83/findog/actions/workflows/ci.yml/badge.svg)](https://github.com/wini83/findog/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)
 
