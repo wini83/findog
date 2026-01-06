@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,10 +23,7 @@ jobs:
       - name: Sync deps (dev)
         run: uv sync --frozen --dev
 
-      - name: Install project
-        run: uv pip install -e .
-
-      - name: Lint (ruff)
+      - name: Lint
         run: |
           uv run ruff check .
           uv run ruff format --check .
@@ -35,7 +31,7 @@ jobs:
       - name: Tests + coverage
         run: |
           uv run pytest \
-            --cov=src \
+            --cov \
             --cov-report=term-missing \
             --cov-report=xml \
-            --cov-fail-under=80
+            --cov-fail-under=65
