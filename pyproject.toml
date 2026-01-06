@@ -30,9 +30,9 @@ dependencies = [
 dev = [
   "ruff",
   "mypy",
+  "commitizen",
   "pytest",
   "pytest-cov",
-  "commitizen",
 ]
 
 [tool.commitizen]
@@ -70,3 +70,18 @@ python_version = "3.12"
 strict = true
 warn_unused_ignores = true
 no_implicit_optional = true
+
+[tool.coverage.run]
+branch = true
+omit = [
+  "tests/*",
+  "data/*",
+  "secrets/*",
+  "__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+]
