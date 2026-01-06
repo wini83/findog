@@ -1,6 +1,6 @@
 [project]
 name = "findog"
-version = "0.7.0"
+version = "0.7.1"
 description = "A simple program to keep your payments in check"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -37,7 +37,7 @@ dev = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.7.0"
+version = "0.7.1"
 tag_format = "v$version"
 version_files = ["pyproject.toml"]
 update_changelog_on_bump = true

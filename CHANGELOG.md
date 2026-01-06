@@ -1,3 +1,14 @@
+## v0.7.1 (2026-01-06)
+
+### Fix
+
+- merge PR #39 – hardening enea
+- **enea**: harden ENEA scraping and settings loading
+
+### Refactor
+
+- **settings**: refator
+
 ## v0.7.0 (2025-08-31)
 
 ### Feat
