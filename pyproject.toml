@@ -41,6 +41,7 @@ version = "0.7.0"
 tag_format = "v$version"
 version_files = ["pyproject.toml"]
 update_changelog_on_bump = true
+annotated_tags = true
 
 [tool.ruff]
 line-length = 88
