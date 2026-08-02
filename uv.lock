@@ -378,16 +378,15 @@ wheels = [
 
 [[package]]
 name = "dropbox"
-version = "12.0.2"
+version = "12.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
-    { name = "six" },
     { name = "stone" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9e/56/ac085f58e8e0d0bcafdf98c2605e454ac946e3d0c72679669ae112dc30be/dropbox-12.0.2.tar.gz", hash = "sha256:50057fd5ad5fcf047f542dfc6747a896e7ef982f1b5f8500daf51f3abd609962", size = 560236, upload-time = "2024-06-03T16:45:30.448Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/2c/08c98e1d818c07ed051b917c674f755402692af9683c106fedab7e8bb9b3/dropbox-12.2.1.tar.gz", hash = "sha256:61fcb821f7e8585aa4b9e2abc94801aaf8d65ed5ca89313450e56d51c46add7e", size = 1251668, upload-time = "2026-07-20T16:43:20.627Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/de/95d8204d9a20fbdb353c5f8e4229b0fcb90f22b96f8246ff1f47c8a45fd5/dropbox-12.0.2-py3-none-any.whl", hash = "sha256:c5b7e9c2668adb6b12dcecd84342565dc50f7d35ab6a748d155cb79040979d1c", size = 572076, upload-time = "2024-06-03T16:45:28.153Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/8d/4dfdb50aa7378cfe8be2820ed375d840340a9dfb4971e76c780883c860d5/dropbox-12.2.1-py3-none-any.whl", hash = "sha256:a0f9cdc3505b104f7a14b35f81a8a0be6f44eb738475ef324243684c25efe1fb", size = 668881, upload-time = "2026-07-20T16:43:19.115Z" },
 ]
 
 [[package]]
@@ -444,7 +443,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = "~=4.13.3" },
     { name = "click", specifier = "~=8.4.2" },
     { name = "colorama" },
-    { name = "dropbox", specifier = "~=12.0.2" },
+    { name = "dropbox", specifier = "~=12.2.1" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "loguru", specifier = "~=0.7.3" },
     { name = "matplotlib", specifier = "~=3.11.1" },
@@ -1077,15 +1076,6 @@ wheels = [
 ]
 
 [[package]]
-name = "ply"
-version = "3.11"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3", size = 159130, upload-time = "2018-02-15T19:01:31.097Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce", size = 49567, upload-time = "2018-02-15T19:01:27.172Z" },
-]
-
-[[package]]
 name = "pre-commit"
 version = "4.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1425,15 +1415,15 @@ wheels = [
 
 [[package]]
 name = "stone"
-version = "3.3.1"
+version = "3.5.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ply" },
-    { name = "six" },
+    { name = "jinja2" },
+    { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/6f/ef25bbc1aefeb9c905d527f1d3cd3f41f22f40566d33001b8bb14ae0cdaf/stone-3.3.1.tar.gz", hash = "sha256:4ef0397512f609757975f7ec09b35639d72ba7e3e17ce4ddf399578346b4cb50", size = 190888, upload-time = "2022-01-25T21:32:16.729Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/17/d26febee12595a50a63b860d4ff2ca8134771a892b5cb5294557537f61b0/stone-3.5.3.tar.gz", hash = "sha256:d0d99f14d154452e71b3e2752efdbbb1769e4fecbc1291b1dfd1a046f7b6a1cb", size = 334800, upload-time = "2026-07-20T04:45:29.956Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/92/d0c83f63d3518e5f0b8a311937c31347349ec9a47b209ddc17f7566f58fc/stone-3.3.1-py3-none-any.whl", hash = "sha256:e15866fad249c11a963cce3bdbed37758f2e88c8ff4898616bc0caeb1e216047", size = 162257, upload-time = "2022-01-25T21:32:15.155Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/48/d8e716c8c706efba93256c6762fc51cd410cab655cee99159bc146b7ab52/stone-3.5.3-py3-none-any.whl", hash = "sha256:5d78bd0b60692756b44758d876d74e4ed2ed938e29aa62646e3cbc247844027b", size = 203854, upload-time = "2026-07-20T04:45:28.603Z" },
 ]
 
 [[package]]
