@@ -59,10 +59,10 @@ class PaymentBook:
         self,
         sheet_name: str,
         category_name: str,
-        amount: float = None,
-        paid: bool = None,
-        due_date: datetime = None,
-        force_unpaid: bool = None,
+        amount: float | None = None,
+        paid: bool | None = None,
+        due_date: datetime | None = None,
+        force_unpaid: bool | None = None,
     ):
         """Update fields in the current month row for a given category."""
         # NOTE: this method can be refactored further if API allows

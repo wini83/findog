@@ -21,8 +21,7 @@ def seconds_from_epoch() -> int:
 def parse_date(string_input):
     """Parse ISO-like date string into datetime."""
     shorted = string_input[0:10]
-    result = datetime.strptime(shorted, "%Y-%m-%d")
-    return result
+    return datetime.strptime(shorted, "%Y-%m-%d")
 
 
 class EkartotekaResult(NamedTuple):
@@ -160,13 +159,12 @@ class Ekartoteka(Client):
         res, data = self.get_settlements(year=year)
         if not res:
             return False, None
-        else:
-            positions = data["results"]
-            # print(positions)
-            balance = 0.0
-            for position in positions:
-                balance += position["Wn"] - position["Ma"]
-            return True, balance
+        positions = data["results"]
+        # print(positions)
+        balance = 0.0
+        for position in positions:
+            balance += position["Wn"] - position["Ma"]
+        return True, balance
 
     def get_premises_data(self):
         """Fetch premises data; returns (ok, data) or error description."""
@@ -252,13 +250,7 @@ class Ekartoteka(Client):
         apartment_fee = self.get_current_fees_sum()
         res_setl, delta = self.get_settlements_sum(datetime.now().year)
         dates = self.get_update_stamp()
-        if res_setl and delta is not None:
-            if delta > 0:
-                paid = False
-            else:
-                paid = True
-        else:
-            paid = None
+        paid = delta <= 0 if res_setl and delta is not None else None
         now = datetime.now()
         li = dates["LI"]
         if now.month != li.month:
@@ -266,10 +258,7 @@ class Ekartoteka(Client):
             paid = False
             force_unpaid = True
         else:
-            if now.day < 25:
-                force_unpaid = False
-            else:
-                force_unpaid = True
+            force_unpaid = now.day >= 25
         return EkartotekaResult(
             apartment_fee=apartment_fee,
             delta=delta,

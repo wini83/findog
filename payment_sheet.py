@@ -215,12 +215,10 @@ class PaymentSheet:
     def _generate_sum_string(self, row: int):
         """Build an Excel SUM formula over monitored columns for the row."""
         result = "=SUM("
-        counter: int = 0
-        for column_str in self._monitored_cols:
+        for counter, column_str in enumerate(self._monitored_cols):
             if counter > 0:
                 result += ","
             result += f'{column_str}{row}'
-            counter += 1
         result += ")"
         return result
 

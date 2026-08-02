@@ -3,6 +3,7 @@ import urllib
 from dataclasses import dataclass, fields
 from datetime import date
 from http.cookiejar import CookieJar
+from typing import ClassVar
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -36,7 +37,7 @@ def pretty_print_invoice(item: dict):
 # noinspection SpellCheckingInspection
 def parse_row(row):
     children = row.children
-    document = dict()
+    document = {}
     for item in children:
         if item["class"][0] == 'left-right-bg':
             if item['data-title'] == "nr dokumentu":
@@ -112,14 +113,11 @@ class NjuInvoice:
 
     @property
     def status_bool(self) -> bool:
-        if self.status == PAID:
-            return True
-        else:
-            return False
+        return self.status == PAID
 
 
 class DataClassUnpack:
-    class_field_cache = {}
+    class_field_cache: ClassVar[dict] = {}
 
     @classmethod
     def instantiate(cls, class_2_instantiate, arg_dict):
@@ -136,13 +134,11 @@ class DataClassUnpack:
 def filter_by_current_period(table: list[NjuInvoice]):
     now = datetime.datetime.now()
     filter_str = now.strftime("%m.%Y")
-    list_out = list(filter(lambda x: x.accounting_period == filter_str, table))
-    return list_out
+    return list(filter(lambda x: x.accounting_period == filter_str, table))
 
 
 def filter_not_paid(table: list[NjuInvoice]):
-    list_out = list(filter(lambda x: not x.status_bool, table))
-    return list_out
+    return list(filter(lambda x: not x.status_bool, table))
 
 
 def print_summary(table: list[NjuInvoice], text_if_none: str = "") -> str:
@@ -232,19 +228,17 @@ class Nju:
             raw_row = bs.find("tr", id=f"id_abc-{i}")
             if raw_row is None:
                 break
-            else:
-                row = parse_row(raw_row)
-                row["phone_nmb"] = self.phone_nmb
-                row_cls = DataClassUnpack.instantiate(NjuInvoice, row)
-                table2.append(row_cls)
-                i = i + 1
+            row = parse_row(raw_row)
+            row["phone_nmb"] = self.phone_nmb
+            row_cls = DataClassUnpack.instantiate(NjuInvoice, row)
+            table2.append(row_cls)
+            i = i + 1
         self.parsed = True
         return table2
 
     def write2file(self):
         if self.logged_in:
-            file = open('nju_html.html', 'w', encoding='utf-8')
-            file.write(self.scrapped_html)
-            file.close()
+            with open('nju_html.html', 'w', encoding='utf-8') as file:
+                file.write(self.scrapped_html)
         else:
             raise ConnectionError

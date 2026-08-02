@@ -31,7 +31,7 @@ class DropboxClient(Client):
 
     def retrieve_file(self, file_path: string) -> bytes:
         """Download a file from Dropbox and return its bytes."""
-        metadata, res = self._dbx.files_download(path=file_path)
+        _metadata, res = self._dbx.files_download(path=file_path)
         return res.content
 
     def commit_file(self, file_path_loc: string, file_path: string):
