@@ -1,0 +1,14 @@
+version: 2
+
+updates:
+  - package-ecosystem: uv
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Europe/Warsaw
+    assignees:
+      - wini83
+    open-pull-requests-limit: 10
