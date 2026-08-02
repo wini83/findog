@@ -11,4 +11,9 @@ updates:
       timezone: Europe/Warsaw
     assignees:
       - wini83
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      production-dependencies:
+        dependency-type: production
+      development-dependencies:
+        dependency-type: development

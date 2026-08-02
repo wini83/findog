@@ -3,7 +3,7 @@
 import datetime
 import json
 import re
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,9 +27,7 @@ def get_last_month_int():
     """Return previous month number as int."""
     today = datetime.date.today()
     first = today.replace(day=1)
-    last_month = first - datetime.timedelta(days=1)
-    last_month = last_month.month
-    return last_month
+    return (first - datetime.timedelta(days=1)).month
 
 
 def aspnet_tokens(html):
@@ -90,7 +88,7 @@ class Iprzedszkole(Client):
         '/iprzedszkole/Pages/PanelRodzica/Naleznosci/'
         'ws_Naleznosci.asmx/pobierzDaneOplat'
     )
-    HEADERS = {
+    HEADERS: ClassVar[dict] = {
         "User-Agent": (
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
             'AppleWebKit/537.36 (KHTML, like Gecko) '

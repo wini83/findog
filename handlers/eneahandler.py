@@ -35,10 +35,7 @@ class EneaHandler(AbstractHandler):
                 f'Last readout value kWh: {enea_results.last_readout_amount_kwh:.2f}'
             )
 
-            if enea_results.last_invoice_unpaid_pln > 0:
-                paid = False
-            else:
-                paid = True
+            paid = enea_results.last_invoice_unpaid_pln <= 0
             if not context.no_excel:
                 today = datetime.now()
                 if (

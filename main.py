@@ -156,8 +156,17 @@ def main(
         poller_iprzedszkole = IPrzedszkoleHandler()
         handler, starter = get_handler(handler, starter, poller_iprzedszkole)
     if API_ENEA in enable_api:
-        poller_enea = EneaHandler()
-        handler, starter = get_handler(handler, starter, poller_enea)
+        if True:
+            click.echo(
+                click.style(
+                    "Enea API is currently disabled due to changes in the API.",
+                    fg='blue',
+                    bold=True,
+                )
+            )
+        else:
+            poller_enea = EneaHandler()
+            handler, starter = get_handler(handler, starter, poller_enea)
     if API_NJU in enable_api:
         poller_nju = NjuHandler()
         handler, starter = get_handler(handler, starter, poller_nju)

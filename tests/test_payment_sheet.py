@@ -28,7 +28,7 @@ def _setup_basic_sheet():
 
 class TestPaymentSheet:
     def test_populate_and_get_active_row(self):
-        wb, ws = _setup_basic_sheet()
+        _wb, ws = _setup_basic_sheet()
         sheet = PaymentSheet(ws, ws.title, ["C"])  # monitor column C
 
         active_row = sheet.get_active_row
@@ -46,7 +46,7 @@ class TestPaymentSheet:
         assert pmt.due_date.year == now.year and pmt.due_date.month == now.month
 
     def test_populate_next_month(self):
-        wb, ws = _setup_basic_sheet()
+        _wb, ws = _setup_basic_sheet()
         sheet = PaymentSheet(ws, ws.title, ["C"])  # monitor column C
 
         active_row = sheet.get_active_row

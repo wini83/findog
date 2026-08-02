@@ -23,15 +23,9 @@ class IPrzedszkoleHandler(AbstractHandler):
             )
             iprzedszkole.login()
             result: Receivables = iprzedszkole.get_receivables()
-            if result.summary_overdue > 0:
-                paid = False
-            else:
-                paid = True
+            paid = result.summary_overdue <= 0
             now = datetime.now()
-            if now.day < 25:
-                force_unpaid = False
-            else:
-                force_unpaid = True
+            force_unpaid = now.day >= 25
             if not context.no_excel:
                 context.payment_book.update_current_payment(
                     sheet_name=context.iprzedszkole_sheet[0],

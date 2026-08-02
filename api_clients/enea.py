@@ -34,9 +34,7 @@ def get_last_month_int():
     """Return previous month number as int."""
     today = date.today()
     first = today.replace(day=1)
-    last_month = first - timedelta(days=1)
-    last_month = last_month.month
-    return last_month
+    return (first - timedelta(days=1)).month
 
 
 @dataclass
@@ -176,8 +174,7 @@ def strip_div(text: str, nested: bool = False):
     """Normalize inner text, optionally collapsing nested newlines."""
     if not nested:
         return text.replace("\n", "")
-    else:
-        return text.replace("\n\n", "").replace("\n", " ")
+    return text.replace("\n\n", "").replace("\n", " ")
 
 
 def find_or_fail(
