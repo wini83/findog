@@ -12,7 +12,7 @@ authors = [
 dependencies = [
   "dropbox~=12.0.2",
   "openpyxl~=3.1.5",
-  "click~=8.1.8",
+  "click~=8.4.2",
   "colorama",
   "jinja2~=3.1.6",
   "loguru~=0.7.3",
