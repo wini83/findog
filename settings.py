@@ -6,7 +6,6 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 # =============================================================================
 # Paths & helpers
 # =============================================================================
@@ -17,6 +16,7 @@ DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
 DEFAULT_SECRETS_DIR = Path(os.getenv("SECRETS_DIR", "/run/secrets"))
 
 logger.info("Using secrets dir: {}", DEFAULT_SECRETS_DIR)
+
 
 def _read_file(path: Path) -> str | None:
     if path.exists():
@@ -35,6 +35,7 @@ def env_if_allowed(name: str, allow_flag: str) -> str | None:
 # =============================================================================
 # Models
 # =============================================================================
+
 
 class Cred(BaseModel):
     username: str | None = None
@@ -140,7 +141,7 @@ class Settings(BaseSettings):
         # ---------------------------------------------------------------------
         # Secrets
         # ---------------------------------------------------------------------
-        
+
         s.dropbox_apikey = (
             read_secret("dropbox_apikey")
             or env_if_allowed("DROPBOX_API_KEY", "ALLOW_ENV_DROPBOX")
