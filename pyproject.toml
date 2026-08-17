@@ -16,14 +16,14 @@ dependencies = [
   "colorama",
   "jinja2~=3.1.6",
   "loguru~=0.7.3",
-  "numpy~=2.5.1",
+  "numpy~=2.5.2",
   "beautifulsoup4~=4.15.0",
   "pandas~=3.0.5",
   "matplotlib~=3.11.1",
   "requests~=2.34.2",
   "PyYAML~=6.0.2",
   "pydantic~=2.13.4",
-  "pydantic-settings~=2.14.2",
+  "pydantic-settings~=2.15.0",
 ]
 
 [dependency-groups]
