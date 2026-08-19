@@ -8,8 +8,8 @@ from openpyxl.cell import Cell
 from openpyxl.styles import Color, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
-from payment import Payment
-from payment_category import PaymentCategory
+from .payment import Payment
+from .payment_category import PaymentCategory
 
 RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
 GREEN_FILL = PatternFill(fill_type='solid', start_color="92D050")

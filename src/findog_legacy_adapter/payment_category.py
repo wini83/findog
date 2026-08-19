@@ -1,6 +1,6 @@
 """Category grouping payments within a sheet."""
 
-from payment import Payment
+from .payment import Payment
 
 
 class PaymentCategory:
