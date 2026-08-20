@@ -1,37 +1,38 @@
 # Findog Legacy Adapter
 
-Biblioteka do odczytu historycznego skoroszytu Findog i przekazania jego danych
-do innej aplikacji, np. seedera FastAPI. Nie zapisuje skoroszytu ani nie
-wykonuje synchronizacji zwrotnej.
+A library for reading a legacy Findog workbook and passing its data to another
+application, such as a FastAPI seeder. It does not write to the workbook or
+perform reverse synchronization.
 
-## Instalacja z GitHub
+## Install from GitHub
 
-W projekcie docelowym dodaj zależność wskazującą na konkretny commit lub tag:
+In the consuming project, add a dependency that points to a specific commit or
+tag:
 
 ```toml
 # pyproject.toml
 dependencies = [
-  "findog-legacy-adapter @ git+https://github.com/TWOJ_LOGIN/findog-legacy-core.git@v0.7.2",
+  "findog-legacy-adapter @ git+https://github.com/YOUR_USERNAME/findog-legacy-core.git@v0.7.2",
 ]
 ```
 
-## Użycie w seederze
+## Use in a seeder
 
 ```python
 from findog_legacy_adapter import load_payment_book_from_dropbox
 
 payment_book = load_payment_book_from_dropbox(
     access_token=settings.dropbox_token,
-    dropbox_path="/Oplaty.xlsm",
+    dropbox_path="/Payments.xlsm",
     monitored_sheets={"Home": ["C", "I", "O"]},
 )
 
 for item in payment_book.payment_list:
-    # item.payment, item.category i item.sheet są obiektami legacy
+    # item.payment, item.category, and item.sheet are legacy objects
     seed_payment(item.payment)
 ```
 
-Jeżeli plik został już pobrany przez Twoje API, nie trzeba łączyć się z Dropbox:
+If your API has already downloaded the file, no Dropbox connection is needed:
 
 ```python
 from findog_legacy_adapter import load_payment_book
@@ -39,14 +40,14 @@ from findog_legacy_adapter import load_payment_book
 payment_book = load_payment_book(workbook_bytes, {"Home": ["C", "I", "O"]})
 ```
 
-## CLI developerskie
+## Development CLI
 
-CLI służy wyłącznie do ręcznego sprawdzenia adaptera. Skopiuj najpierw
-`config/config-example.yaml` do `config/config.yaml`; zawiera on
-`excel_dropbox_path` i `monitored_sheets`. Token może być w `.env`:
+The CLI is only for manually checking the adapter. First copy
+`config/config-example.yaml` to `config/config.yaml`; it contains
+`excel_dropbox_path` and `monitored_sheets`. The token may be stored in `.env`:
 
 ```env
-DROPBOX_API_KEY=twoj_token
+DROPBOX_API_KEY=your_token
 ```
 
 ```bash
@@ -54,10 +55,14 @@ uv run python main.py \
   --config config/config.yaml
 ```
 
-`--dropbox-path` i `--monitored-sheets '{"Home": ["C"]}'` mogą nadpisać
-wartości z YAML. Ścieżkę configu można też ustawić przez `CONFIG_PATH`.
+`--dropbox-path` and `--monitored-sheets '{"Home": ["C"]}'` override their
+YAML values. You can also set the config path through `CONFIG_PATH`.
 
-## Testy i build
+Use `--interpret-codes` to read four-character category codes from header-cell
+comments. Codes must contain at least two uppercase letters and be unique across
+the monitored sheets. Invalid or duplicate codes are displayed as CLI errors.
+
+## Test and build
 
 ```bash
 uv run pytest -q
