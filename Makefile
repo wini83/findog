@@ -1,11 +1,13 @@
 SHELL := /bin/bash
 
-.PHONY: dev ruff
-
-dev:
-	@test -f .env || { echo "Brak pliku .env" >&2; exit 1; }
-	@set -a; . ./.env; set +a; uv run python main.py --enable-api-all --enable-dropbox
+.PHONY: ruff test build
 
 ruff:
 	uv run ruff check . --fix
 	uv run ruff format .
+
+test:
+	uv run pytest -q
+
+build:
+	uv run python -m build

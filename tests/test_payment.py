@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from payment import Payment
+from findog_legacy_adapter.payment import Payment
 
 
 class TestPayment:

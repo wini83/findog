@@ -229,3 +229,6 @@ settings.py
 /config/config.yaml
 /secrets/
 /docker-compose.yml
+
+# Windows metadata copied alongside configuration files
+*:Zone.Identifier

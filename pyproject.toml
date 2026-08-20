@@ -1,10 +1,10 @@
 [project]
-name = "findog"
+name = "findog-legacy-adapter"
 version = "0.7.2"
-description = "A simple program to keep your payments in check"
+description = "Adapter that reads legacy Findog workbooks into Python objects"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
   { name = "wini83" }
 ]
@@ -12,28 +12,29 @@ authors = [
 dependencies = [
   "dropbox~=12.2.1",
   "openpyxl~=3.1.5",
-  "click~=8.4.2",
-  "colorama",
-  "jinja2~=3.1.6",
-  "loguru~=0.7.3",
   "numpy~=2.5.2",
-  "beautifulsoup4~=4.15.0",
-  "pandas~=3.0.5",
-  "matplotlib~=3.11.1",
-  "requests~=2.34.2",
-  "PyYAML~=6.0.2",
-  "pydantic~=2.13.4",
-  "pydantic-settings~=2.15.0",
 ]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["findog_legacy_adapter*"]
 
 [dependency-groups]
 dev = [
+  "click~=8.4.2",
+  "python-dotenv~=1.2.1",
+  "PyYAML~=6.0.2",
   "pre-commit",
   "ruff",
   "mypy",
   "commitizen",
   "pytest",
   "pytest-cov",
+  "build",
 ]
 
 [tool.commitizen]
@@ -71,9 +72,6 @@ exclude = [
 
 [tool.ruff.format]
 quote-style = "preserve"
-
-[tool.ruff.lint.per-file-ignores]
-"main.py" = ["RET505"]
 
 [tool.mypy]
 python_version = "3.12"

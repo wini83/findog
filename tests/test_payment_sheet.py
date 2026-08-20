@@ -2,7 +2,7 @@ from datetime import datetime
 
 from openpyxl import Workbook
 
-from payment_sheet import PaymentSheet
+from findog_legacy_adapter.payment_sheet import PaymentSheet
 
 
 def _setup_basic_sheet():
