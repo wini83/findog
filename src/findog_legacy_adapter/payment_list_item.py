@@ -44,7 +44,7 @@ class PaymentListItem:
             'paid': self._payment.paid,
             'duedate': self._payment.due_date.strftime("%Y-%m-%d"),
             'b_days_left': self._payment.b_days_left,
-            'icon': self._category.icon,
+            'code': self._category.code,
         }
 
     def __str__(self):

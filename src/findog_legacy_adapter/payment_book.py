@@ -7,7 +7,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell
 
 from .payment_list_item import PaymentListItem
-from .payment_sheet import PaymentSheet
+from .payment_sheet import PaymentCodeError, PaymentSheet
 
 
 def sort_payment_list_by_date(
@@ -32,10 +32,11 @@ class PaymentBook:
     _workbook: Workbook = None
     _monitored_sheets = None
 
-    def __init__(self, monitored_sheets):
+    def __init__(self, monitored_sheets, interpret_codes: bool = False):
         """Initialize with a map of monitored sheet names to column letters."""
         self._payment_sheets = {}
         self._monitored_sheets = monitored_sheets
+        self._interpret_codes = interpret_codes
 
     def load_and_process(self, file: bytes):
         """Load workbook from bytes and build internal structures."""
@@ -43,13 +44,32 @@ class PaymentBook:
         for sheet_name, monit_cats in self.monitored_sheets.items():
             if sheet_name in self._workbook:
                 payment_sheet = PaymentSheet(
-                    self._workbook[sheet_name], sheet_name, monit_cats
+                    self._workbook[sheet_name],
+                    sheet_name,
+                    monit_cats,
+                    interpret_codes=self._interpret_codes,
                 )
                 current_row = payment_sheet.get_active_row
                 if current_row > 1:
                     payment_sheet.populate_categories(current_row)
                     payment_sheet.populate_next_month(current_row)
                 self._payment_sheets[sheet_name] = payment_sheet
+        if self._interpret_codes:
+            self._validate_unique_codes()
+
+    def _validate_unique_codes(self) -> None:
+        """Ensure category codes are unique across all processed sheets."""
+        seen_codes: dict[str, str] = {}
+        for sheet in self._payment_sheets.values():
+            for category in sheet.categories.values():
+                location = f"{sheet.name}!{category.column}1"
+                existing_location = seen_codes.get(category.code)
+                if existing_location is not None:
+                    raise PaymentCodeError(
+                        f"Duplicate code {category.code!r} in cell {location}; "
+                        f"already used in cell {existing_location}."
+                    )
+                seen_codes[category.code] = location
 
     def save_to_file(self, filename):
         """Persist current workbook to a file path."""

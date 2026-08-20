@@ -8,7 +8,7 @@ import click
 import yaml
 from dotenv import load_dotenv
 
-from findog_legacy_adapter import load_payment_book_from_dropbox
+from findog_legacy_adapter import PaymentCodeError, load_payment_book_from_dropbox
 
 load_dotenv()
 
@@ -33,11 +33,17 @@ load_dotenv()
     "--monitored-sheets",
     help='Override YAML with JSON, for example: {"Home": ["C", "I"]}.',
 )
+@click.option(
+    "--interpret-codes/--no-interpret-codes",
+    default=False,
+    help="Read and validate category codes from header comments.",
+)
 def main(
     dropbox_token: str,
     config_path: Path,
     dropbox_path: str | None,
     monitored_sheets: str | None,
+    interpret_codes: bool,
 ) -> None:
     """Download a workbook and print the number of loaded payment records."""
     config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
@@ -69,7 +75,12 @@ def main(
             "Set excel_dropbox_path in config or pass --dropbox-path."
         )
 
-    payment_book = load_payment_book_from_dropbox(dropbox_token, dropbox_path, sheets)
+    try:
+        payment_book = load_payment_book_from_dropbox(
+            dropbox_token, dropbox_path, sheets, interpret_codes=interpret_codes
+        )
+    except PaymentCodeError as exc:
+        raise click.ClickException(str(exc)) from exc
     click.echo(f"Loaded {len(payment_book.payment_list)} payment records.")
 
 
