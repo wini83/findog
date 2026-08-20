@@ -1,6 +1,7 @@
 """Sheet-level helpers to read, write and format payment data."""
 
 import calendar
+import re
 from copy import copy
 from datetime import datetime, timedelta
 
@@ -8,13 +9,32 @@ from openpyxl.cell import Cell
 from openpyxl.styles import Color, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
-from payment import Payment
-from payment_category import PaymentCategory
+from .payment import Payment
+from .payment_category import PaymentCategory
 
 RED_FILL = PatternFill(start_color='FFFF0000', end_color='FFFF0000', fill_type='solid')
 GREEN_FILL = PatternFill(fill_type='solid', start_color="92D050")
 YELLOW_FILL = PatternFill(fill_type='solid', start_color=Color(indexed=5))
 BLUE_FILL = PatternFill(fill_type='solid', start_color="6ED1FE")
+CODE_PATTERN = re.compile(r"(?=(?:.*[A-Z]){2})[A-Z0-9]{4}\Z")
+
+
+class PaymentCodeError(ValueError):
+    """Raised when a category code cannot be read from a workbook header."""
+
+
+def interpret_category_code(comment_text: str | None, cell: str) -> str:
+    """Validate and normalize the category code stored in a header comment."""
+    if comment_text is None:
+        raise PaymentCodeError(f"Missing required code comment in cell {cell}.")
+
+    code = comment_text.strip()
+    if not CODE_PATTERN.fullmatch(code):
+        raise PaymentCodeError(
+            f"Invalid code in cell {cell}: expected exactly four uppercase letters "
+            "or digits, including at least two letters."
+        )
+    return code
 
 
 def add_months(source_date: datetime, months: int):
@@ -34,12 +54,19 @@ class PaymentSheet:
     _categories: dict[str, PaymentCategory] = None
     _monitored_cols: list[str] = None
 
-    def __init__(self, worksheet: Worksheet, name: str, monitored_cols: list[str]):
+    def __init__(
+        self,
+        worksheet: Worksheet,
+        name: str,
+        monitored_cols: list[str],
+        interpret_codes: bool = False,
+    ):
         """Bind to a worksheet and configure monitored columns."""
         self._categories = {}
         self._sheet = worksheet
         self._name = name
         self._monitored_cols = monitored_cols
+        self._interpret_codes = interpret_codes
 
     @property
     def monitored_cols(self) -> list[str]:
@@ -89,11 +116,12 @@ class PaymentSheet:
         for column in self._monitored_cols:
             name = self._sheet[f"{column}1"].value
             item: PaymentCategory = PaymentCategory(name=name, column=column)
-            comment = self._sheet[f"{column}1"].comment
-            if comment is None:
-                item.icon = "fa-camera"
-            else:
-                item.icon = comment.text.strip()
+            if self._interpret_codes:
+                comment = self._sheet[f"{column}1"].comment
+                item.code = interpret_category_code(
+                    comment.text if comment is not None else None,
+                    f"{self._name}!{column}1",
+                )
             processed_row = active_row
             while (
                 self._sheet[f"{column}{processed_row}"].value is not None

@@ -3,7 +3,7 @@ from io import BytesIO
 
 from openpyxl import Workbook
 
-from payment_book import PaymentBook
+from findog_legacy_adapter.payment_book import PaymentBook
 
 
 def _make_workbook_bytes():

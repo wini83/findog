@@ -1,5 +1,5 @@
-from payment import Payment
-from payment_category import PaymentCategory
+from findog_legacy_adapter.payment import Payment
+from findog_legacy_adapter.payment_category import PaymentCategory
 
 
 class TestPaymentCategory:

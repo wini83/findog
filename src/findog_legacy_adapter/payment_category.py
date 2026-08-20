@@ -1,6 +1,6 @@
 """Category grouping payments within a sheet."""
 
-from payment import Payment
+from .payment import Payment
 
 
 class PaymentCategory:
@@ -8,7 +8,7 @@ class PaymentCategory:
 
     name: str = None
     payments: dict[str, Payment] = None
-    icon = None
+    code: str | None = None
 
     def __init__(self, name="", column="C"):
         """Create a category with a name and assigned column letter."""
