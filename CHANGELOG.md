@@ -1,3 +1,9 @@
+## v1.0.0a0 (2026-08-21)
+
+### Feat
+
+- interpret payment category codes
+
 ## v0.7.2 (2026-08-02)
 
 ## v0.7.1 (2026-01-06)
