@@ -12,7 +12,7 @@ tag:
 ```toml
 # pyproject.toml
 dependencies = [
-  "findog-legacy-adapter @ git+https://github.com/YOUR_USERNAME/findog-legacy-core.git@v0.7.2",
+  "findog-legacy-adapter @ git+https://github.com/findog-app/findog-legacy-core.git@v0.7.2",
 ]
 ```
 
