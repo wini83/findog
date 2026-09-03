@@ -2,6 +2,10 @@
 
 [Polski](README.md) | English
 
+> [!IMPORTANT]
+> **This repository is archived and is no longer maintained.**
+> Development continues as [Oblidog](https://github.com/oblidog/oblidog-ledger).
+
 Automatic home payments assistant: fetches amounts and due dates from several services, updates an Excel workbook stored in Dropbox, reminds you about upcoming deadlines (Pushover), sends an e‑mail summary, and optionally generates simple analytics.
 
 [![CI](https://github.com/wini83/findog/actions/workflows/ci.yml/badge.svg)](https://github.com/wini83/findog/actions/workflows/ci.yml)
