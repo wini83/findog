@@ -2,6 +2,10 @@
 
 [Polski](README.md) | [English](README.en.md)
 
+> [!IMPORTANT]
+> **To repozytorium jest zarchiwizowane i nie jest już rozwijane.**
+> Rozwój projektu jest kontynuowany jako [Oblidog](https://github.com/oblidog/oblidog-ledger).
+
 Automatyczny asystent domowych płatności: pobiera kwoty i terminy z kilku serwisów, aktualizuje skoroszyt Excel w Dropbox, przypomina o zbliżających się terminach (Pushover), wysyła podsumowanie e‑mailem i opcjonalnie generuje prostą analitykę.
 
 [![CI](https://github.com/wini83/findog/actions/workflows/ci.yml/badge.svg)](https://github.com/wini83/findog/actions/workflows/ci.yml)
